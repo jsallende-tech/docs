@@ -1,0 +1,111 @@
+---
+title: "WPI Codelabs"
+description: "Hands-on tutorials for implementing WPI in your SmartPOS applications"
+---
+
+# WPI Codelabs
+
+Practical, hands-on tutorials to help you implement the Worldline Payment Interface in your SmartPOS applications.
+
+## Getting Started
+
+<Steps>
+  <Step title="Set Up Your Development Environment">
+    Ensure you have Android Studio installed and configured for SmartPOS development.
+  </Step>
+  <Step title="Get Your Test Terminal">
+    Request a test terminal from your Worldline Partner Manager.
+  </Step>
+  <Step title="Access the Sandbox">
+    Set up access to the SmartPOS sandbox environment for testing.
+  </Step>
+</Steps>
+
+## Basic Payment Integration
+
+### Purchase Transaction
+
+```java
+// Example: Basic purchase transaction
+public void initiatePurchase(double amount, String currency) {
+    Intent paymentIntent = new Intent("com.worldline.payment.action.PROCESS_TRANSACTION");
+
+    Bundle extras = new Bundle();
+    extras.putString("WPI_SERVICE_TYPE", "PURCHASE");
+    extras.putLong("WPI_AMOUNT", (long)(amount * 100)); // Convert to cents
+    extras.putString("WPI_CURRENCY", currency);
+    extras.putString("WPI_SESSION_ID", generateSessionId());
+    extras.putString("WPI_VERSION", "2.0");
+
+    paymentIntent.putExtras(extras);
+    startActivityForResult(paymentIntent, REQUEST_PAYMENT);
+}
+
+// Handle the response
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (requestCode == REQUEST_PAYMENT) {
+        if (resultCode == RESULT_OK) {
+            Bundle response = data.getExtras();
+            int wpiResult = response.getInt("WPI_RESULT_CODE");
+
+            if (wpiResult == 0) {
+                // Payment successful
+                String authCode = response.getString("WPI_AUTHORIZATION_CODE");
+                String receipt = response.getString("WPI_RECEIPT");
+                handleSuccessfulPayment(authCode, receipt);
+            } else {
+                // Payment failed
+                handlePaymentError(wpiResult);
+            }
+        }
+    }
+}
+```
+
+### Refund Transaction
+
+```java
+public void initiateRefund(double amount, String currency, String originalTransactionId) {
+    Intent refundIntent = new Intent("com.worldline.payment.action.PROCESS_TRANSACTION");
+
+    Bundle extras = new Bundle();
+    extras.putString("WPI_SERVICE_TYPE", "REFUND");
+    extras.putLong("WPI_AMOUNT", (long)(amount * 100));
+    extras.putString("WPI_CURRENCY", currency);
+    extras.putString("WPI_SESSION_ID", generateSessionId());
+    extras.putString("WPI_ORIGINAL_TRANSACTION_ID", originalTransactionId);
+    extras.putString("WPI_VERSION", "2.0");
+
+    refundIntent.putExtras(extras);
+    startActivityForResult(refundIntent, REQUEST_REFUND);
+}
+```
+
+## Advanced Topics
+
+<CardGroup cols={2}>
+  <Card title="Pre-authorization Flow" icon="lock">
+    Learn how to implement pre-authorization for reservations and hold amounts.
+  </Card>
+  <Card title="Receipt Customization" icon="receipt">
+    Customize receipt format and delivery options.
+  </Card>
+  <Card title="Error Handling" icon="bug">
+    Best practices for handling WPI errors gracefully.
+  </Card>
+  <Card title="Background Operations" icon="gears">
+    Implement background information queries using Messenger service.
+  </Card>
+</CardGroup>
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="WPI 2.0 Specification" icon="book" href="/smartpos/wpi/wpi-version-2-0">
+    Complete API reference
+  </Card>
+  <Card title="SDK Documentation" icon="code" href="/smartpos/app-development/sdk">
+    SmartPOS SDK for advanced features
+  </Card>
+</CardGroup>

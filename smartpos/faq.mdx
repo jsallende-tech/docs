@@ -1,0 +1,68 @@
+---
+title: "FAQ"
+description: "Frequently Asked Questions about SmartPOS development"
+---
+
+# Frequently Asked Questions
+
+## Getting Started
+
+<AccordionGroup>
+  <Accordion title="How do I become a SmartPOS partner?">
+    Contact the Worldline Partner Management team through the [contact form](https://worldline.com/en/home/contact). You'll receive access to the Sandbox environment and documentation after signing a partnership agreement.
+  </Accordion>
+  <Accordion title="How do I get a test terminal?">
+    Contact your sales/account manager to request WL Android Test Terminals for development and testing.
+  </Accordion>
+  <Accordion title="Where can I find the latest WPI documentation?">
+    The latest WPI documentation is available in the [WPI section](/smartpos/wpi/index) of this portal. You can also access it through the Partner Center.
+  </Accordion>
+</AccordionGroup>
+
+## Development
+
+<AccordionGroup>
+  <Accordion title="Which Android version should I target?">
+    SmartPOS devices run Android with SDK 19 or higher. Check the specific device specifications for the exact Android version.
+  </Accordion>
+  <Accordion title="Can I use WebView in my application?">
+    WebView is allowed but comes with strict [legal conditions](/smartpos/app-development/web-view) due to PCI compliance requirements. Review the guidelines carefully.
+  </Accordion>
+  <Accordion title="How do I handle payment errors?">
+    WPI returns error codes in the response. Implement proper error handling to display meaningful messages to users and log errors for troubleshooting.
+  </Accordion>
+</AccordionGroup>
+
+## Deployment
+
+<AccordionGroup>
+  <Accordion title="How long does app approval take?">
+    Approval time depends on the completeness of your submission and any technical reviews required. Ensure your Application Release Note is complete to expedite the process.
+  </Accordion>
+  <Accordion title="Can I update my app after publication?">
+    Yes, you can submit updates through the Developer Center. Each update requires a new Application Release Note and goes through the approval process.
+  </Accordion>
+  <Accordion title="Which markets is my app available in?">
+    Distribution is configured based on the information in your Application Release Note and your partnership agreement. Contact your Partner Manager for specific market availability.
+  </Accordion>
+</AccordionGroup>
+
+## Technical
+
+<AccordionGroup>
+  <Accordion title="What payment methods are supported?">
+    WPI supports various payment methods including contactless, chip and PIN, and magnetic stripe. Supported methods depend on terminal configuration and acquirer agreements.
+  </Accordion>
+  <Accordion title="How do I implement receipt printing?">
+    WPI provides receipt data in the response. You can use the terminal's built-in printer or implement digital receipt delivery. See the WPI documentation for receipt format options.
+  </Accordion>
+  <Accordion title="Can I access terminal hardware directly?">
+    Access to terminal hardware is provided through the SmartPOS API and WPI interfaces. Direct hardware access is not permitted for security reasons.
+  </Accordion>
+</AccordionGroup>
+
+## Need More Help?
+
+<Card title="Contact Support" icon="headset" href="/smartpos/wl-support">
+  Contact Worldline Support for additional assistance
+</Card>

@@ -1,0 +1,147 @@
+---
+title: "Swift SDK Guide"
+description: "TIM API Swift SDK implementation guide"
+---
+
+# TIM API Swift SDK Guide
+
+## Introduction
+
+The TIM API Swift SDK provides a native Swift implementation for ECR integration with Worldline terminals on iOS and macOS platforms.
+
+## Getting Started
+
+### Swift Package Manager
+
+Add to your `Package.swift`:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/worldline/timapi-swift.git", from: "1.0.0")
+]
+```
+
+### CocoaPods
+
+Add to your `Podfile`:
+
+```ruby
+pod 'WorldlineTimApi'
+```
+
+### Basic Setup
+
+```swift
+import TimApi
+
+class TerminalManager {
+    private var terminal: Terminal?
+
+    func setup() {
+        // Create terminal settings
+        let settings = TerminalSettings()
+        settings.terminalId = "TERMINAL001"
+        settings.guides = [.retail, .dialog]
+
+        // Create terminal instance
+        terminal = Terminal(settings: settings)
+
+        // Set delegate
+        terminal?.delegate = self
+    }
+
+    func performTransaction() {
+        let request = TransactionRequest()
+        request.amount = 1000 // Amount in cents
+        request.currency = "EUR"
+        request.transactionType = .purchase
+
+        terminal?.transaction(request) { response in
+            if response.result == .success {
+                print("Transaction successful")
+            }
+        }
+    }
+}
+
+extension TerminalManager: TerminalDelegate {
+    func terminal(_ terminal: Terminal, didCompleteTransactionWith response: TransactionResponse) {
+        print("Transaction completed: \(response.result)")
+    }
+}
+```
+
+## Configuration
+
+### Network Settings
+
+```swift
+let settings = TerminalSettings()
+
+// Broadcast mode
+settings.terminalId = "TERMINAL001"
+
+// Or direct connect
+settings.connectionType = .direct
+settings.hostAddress = "192.168.1.100"
+settings.hostPort = 7784
+```
+
+### Guide Configuration
+
+```swift
+// Enable multiple guides
+settings.guides = [.retail, .petrol, .dialog]
+```
+
+## Async/Await (iOS 15+)
+
+```swift
+func processTransaction() async throws {
+    let request = TransactionRequest()
+    request.amount = 1000
+    request.currency = "EUR"
+
+    do {
+        let response = try await terminal?.transaction(request)
+
+        if response?.result == .success {
+            print("Transaction successful")
+        }
+    } catch let error as TerminalError {
+        print("Error: \(error.code) - \(error.localizedDescription)")
+    }
+}
+```
+
+## Combine Framework
+
+```swift
+import Combine
+
+var cancellables = Set<AnyCancellable>()
+
+terminal?.transactionPublisher(request)
+    .sink(
+        receiveCompletion: { completion in
+            if case .failure(let error) = completion {
+                print("Error: \(error)")
+            }
+        },
+        receiveValue: { response in
+            print("Transaction result: \(response.result)")
+        }
+    )
+    .store(in: &cancellables)
+```
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="TIMAPI Overview" icon="house" href="/timapi/index">
+    Return to SDK overview
+  </Card>
+  <Card title="Version History" icon="clock-rotate-left" href="/timapi/version-history">
+    SDK version history
+  </Card>
+</CardGroup>

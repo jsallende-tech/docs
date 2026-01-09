@@ -1,0 +1,63 @@
+---
+title: "SmartPOS API Overview"
+description: "SmartPOS API for accessing terminal information and services"
+---
+
+# SmartPOS API Overview
+
+The SmartPOS API provides a set of interfaces for business applications to access terminal-specific information and services on Worldline SmartPOS devices.
+
+## What is SmartPOS API?
+
+The SmartPOS API allows your applications to:
+
+<CardGroup cols={2}>
+  <Card title="Terminal Information" icon="info-circle">
+    Access terminal identification, configuration, and status information
+  </Card>
+  <Card title="Merchant Data" icon="store">
+    Retrieve merchant-related information configured on the terminal
+  </Card>
+  <Card title="Device Capabilities" icon="microchip">
+    Query hardware capabilities and supported features
+  </Card>
+  <Card title="System Services" icon="gears">
+    Interact with system-level services on the SmartPOS device
+  </Card>
+</CardGroup>
+
+## When to Use SmartPOS API
+
+Use the SmartPOS API when your application needs to:
+
+- Display terminal or merchant information to users
+- Adapt behavior based on terminal capabilities
+- Integrate with terminal management systems
+- Access device-specific features not available through WPI
+
+<Note>
+For payment processing, use the [WPI (Worldline Payment Interface)](/smartpos/wpi/index). SmartPOS API is complementary to WPI for non-payment related terminal interactions.
+</Note>
+
+## API Versions
+
+<Card title="SmartPOS API 1.7" icon="file-code" href="/smartpos/smartpos-api/smartpos-api-version-1-7">
+  Current version with full feature set
+</Card>
+
+## Getting Started
+
+<Steps>
+  <Step title="Review Documentation">
+    Familiarize yourself with the SmartPOS API specification.
+  </Step>
+  <Step title="Add Dependencies">
+    Include the SmartPOS API library in your Android project.
+  </Step>
+  <Step title="Bind to Service">
+    Connect to the SmartPOS service from your application.
+  </Step>
+  <Step title="Query Information">
+    Use the API methods to retrieve terminal information.
+  </Step>
+</Steps>

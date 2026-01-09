@@ -1,0 +1,69 @@
+---
+title: "Security"
+description: "Security guidelines and requirements for SmartPOS applications"
+---
+
+# Security
+
+Security is paramount when developing applications for payment terminals. Follow these guidelines to ensure your SmartPOS application meets security requirements.
+
+## Compliance Requirements
+
+<CardGroup cols={2}>
+  <Card title="PCI DSS" icon="shield-halved">
+    Payment Card Industry Data Security Standard compliance is mandatory for all payment applications.
+  </Card>
+  <Card title="GDPR" icon="user-shield">
+    General Data Protection Regulation compliance for handling personal data.
+  </Card>
+</CardGroup>
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Data Protection">
+    - Never store sensitive cardholder data (PAN, CVV, PIN)
+    - Encrypt all data in transit
+    - Use secure storage for any persistent data
+    - Implement proper data retention policies
+  </Accordion>
+  <Accordion title="Code Security">
+    - Obfuscate and shrink release builds
+    - Remove debug logs in production
+    - Implement certificate pinning for network calls
+    - Use secure random number generation
+  </Accordion>
+  <Accordion title="Access Control">
+    - Implement proper authentication mechanisms
+    - Use principle of least privilege
+    - Validate all user inputs
+    - Protect against injection attacks
+  </Accordion>
+  <Accordion title="Network Security">
+    - Use TLS 1.2 or higher
+    - Validate server certificates
+    - Implement timeout mechanisms
+    - Handle network errors securely
+  </Accordion>
+</AccordionGroup>
+
+## WebView Security
+
+<Warning>
+Using WebView in payment applications carries significant security risks. Please review the [WebView guidelines](/smartpos/app-development/web-view) carefully before implementation.
+</Warning>
+
+## Security Review
+
+All applications submitted to the SmartPOS Store undergo security review as part of the [certification process](/smartpos/app-development/app-certification).
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="PCI DSS Documentation" icon="external-link" href="https://www.pcisecuritystandards.org/document_library/">
+    Official PCI Security Standards
+  </Card>
+  <Card title="Android Security Guide" icon="external-link" href="https://developer.android.com/privacy-and-security/security-tips">
+    Android Security Best Practices
+  </Card>
+</CardGroup>

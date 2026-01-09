@@ -1,0 +1,78 @@
+---
+title: "Migration to v5.1-WL1.0.0"
+description: "Step-by-step migration guide to Terminal API version 5.1-WL1.0.0"
+---
+
+# Migration Plan to v5.1-WL1.0.0
+
+To align with the updated Terminal API (version **5.1-WL1.0.0**), please follow this step-by-step migration process.
+
+## Overview
+
+Version 5.1-WL1.0.0 aligns with the **Nexo Retailer 5.1** standard and includes several enhancements and changes from previous versions.
+
+## Key Changes
+
+<AccordionGroup>
+  <Accordion title="Protocol Version Update">
+    Update all requests to use `"ProtocolVersion": "5.1-WL1.0.0"` in the header.
+  </Accordion>
+  <Accordion title="New Fields">
+    Review and implement new optional fields that may enhance your integration.
+  </Accordion>
+  <Accordion title="Deprecated Endpoints">
+    Identify and migrate away from any deprecated endpoints in your implementation.
+  </Accordion>
+  <Accordion title="Response Structure">
+    Some response fields may have changed. Ensure your parsing logic handles the new structure.
+  </Accordion>
+</AccordionGroup>
+
+## Migration Steps
+
+<Steps>
+  <Step title="Review Release Notes">
+    Read the complete release notes to understand all changes.
+  </Step>
+  <Step title="Update Protocol Version">
+    Change the `ProtocolVersion` field in all your requests:
+    ```json
+    {
+      "Header": {
+        "ProtocolVersion": "5.1-WL1.0.0",
+        ...
+      }
+    }
+    ```
+  </Step>
+  <Step title="Test in Integration Environment">
+    Thoroughly test your updated implementation in the integration environment.
+  </Step>
+  <Step title="Review Response Handling">
+    Ensure your response parsing handles any new or changed fields.
+  </Step>
+  <Step title="Deploy to Production">
+    After successful testing, deploy to production.
+  </Step>
+</Steps>
+
+## Testing Checklist
+
+Before deploying to production, verify:
+
+- [ ] All requests use `ProtocolVersion: "5.1-WL1.0.0"`
+- [ ] Payment transactions complete successfully
+- [ ] Refund transactions work correctly
+- [ ] Pre-authorization flows function as expected
+- [ ] Error responses are handled properly
+- [ ] Webhooks receive correct data (for async flows)
+
+## Support
+
+<Card title="Contact Support" icon="envelope" href="mailto:terminalAPI@worldline.com">
+  If you encounter issues during migration, contact terminalAPI@worldline.com
+</Card>
+
+<Card title="Release Notes" icon="clipboard-list" href="/terminal/release-notes">
+  View complete release notes
+</Card>

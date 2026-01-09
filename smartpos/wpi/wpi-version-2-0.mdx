@@ -1,0 +1,168 @@
+---
+title: "WPI Version 2.0"
+description: "WPI 2.0 Specification - Complete reference for Worldline Payment Interface"
+---
+
+# WPI Version 2.0
+
+**Revision #7**
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Interface Structure](#interface-structure)
+3. [Payment Solution Implementation](#payment-solution-implementation)
+4. [Data Dictionary](#data-dictionary)
+
+---
+
+## Overview
+
+The Worldline Payment Interface (WPI) is an Android intent-based interface that enables easy and fast integration with payment apps. It is designed to allow additional business applications to execute payments on any Worldline offered SmartPOS device. A SmartPOS device is a payment device that runs Android.
+
+All Worldline Payment Solutions support WPI, which means that business applications that use this interface can run everywhere without any change of code. This makes it easy for developers to build payment apps that are compatible with a wide range of payment devices and payment protocols.
+
+The WPI interface is built on top of the Android Intent mechanism, which allows different parts of an app to communicate with each other in a structured way. By using intents to trigger payment-related actions, the WPI interface simplifies the payment integration process.
+
+### What's New in 2.0
+
+<AccordionGroup>
+  <Accordion title="Interface Structure Extensions">
+    - Gather information from Payment Solution
+    - Session support
+      - `WPI_ERR_COND_SESSION_ID_ALREADY_IN_USE`
+      - Print Receipt Session ID
+      - Last Transaction Requests uses Session ID
+    - `WPI_VERSION` changed from Integer to String
+    - Clarified the use of messenger service for background actions
+  </Accordion>
+  <Accordion title="Management Functional Extensions">
+    - Payment Parameterization
+    - Acquirer Parameterization
+    - Print Receipt
+    - Abort Ongoing Payment
+  </Accordion>
+  <Accordion title="Financial Extensions - Request Fields">
+    - `productRecords`
+    - `receiptFormat`
+    - `recognitionTimeout`
+    - `recognitionOptions`
+    - `receiptTarget`
+  </Accordion>
+  <Accordion title="Financial Extensions - Response Fields">
+    - `dccUsed`, `softwareVersion`, `terminalIdentifier`
+    - `supportedLanguages`, `cardholderDefaultLanguage`, `merchantLanguage`
+    - `countryCode`, `defaultCurrency`, `supportedCurrencies`
+    - `shopInfo`, `acquirerProtocol`, `supportedTicketFormats`
+    - `paymentInformation`, `paymentSolutionSupportedServiceTypes`
+    - `entryMode`, `isoTrack1`, `isoTrack2`, `isoTrack3`
+    - `token`, `pan`, `mediaType`, `mediaUniqueIdentifier`
+    - `waitForNextAction`, `nextActionWaitTime`, `tipAmount`
+  </Accordion>
+</AccordionGroup>
+
+### Revision History
+
+| Revision | Changes |
+|----------|---------|
+| #7 | Clarification added for QR Code printed on receipt; JSON format example updated for Receipt |
+| #6 | Renamed Reservation chapters to Pre-authorization terminology; Clarified `paymentSolutionReference` usage; Changed `isoTrack1` and `isoTrack2` data types to String |
+
+---
+
+## Interface Structure
+
+The WPI provides a set of intents that developers can use to build apps that work with the interface.
+
+### Intent Types
+
+| Type | Category | Intent | Purpose |
+|------|----------|--------|---------|
+| Financial | Display Action | `com.worldline.payment.action.PROCESS_TRANSACTION` | Process a financial transaction |
+| Management | Display Action | `com.worldline.payment.action.PROCESS_MANAGEMENT` | Trigger payment solution managed actions |
+| Information | Background Action | `com.worldline.payment.action.PROCESS_INFORMATION` | Background management of payment solution specific information |
+
+### Action Categories
+
+<Tabs>
+  <Tab title="Display Actions">
+    These actions start the payment solution that are processing financial transactions or require user interaction.
+
+    - Uses [Android intents](https://developer.android.com/reference/android/content/Intent)
+  </Tab>
+  <Tab title="Background Actions">
+    These actions perform background processing that doesn't require user interaction.
+
+    - Uses [Messenger service](https://developer.android.com/guide/components/bound-services#Messenger)
+    - The `Message.what` attribute should be set to code `895349` for any WPI message
+    - The `Message.obj` should be a bundle formatted like the WPI Extras
+    - Same structure and rules apply as Display Actions
+  </Tab>
+</Tabs>
+
+---
+
+## Payment Solution Implementation
+
+### Transaction Flow
+
+<Steps>
+  <Step title="Initialize">
+    Create the intent with required parameters
+  </Step>
+  <Step title="Send Intent">
+    Start the activity with the payment intent
+  </Step>
+  <Step title="Process">
+    Payment solution processes the transaction
+  </Step>
+  <Step title="Receive Response">
+    Handle the response in onActivityResult
+  </Step>
+</Steps>
+
+### Sample Code
+
+```java
+// Create payment intent
+Intent paymentIntent = new Intent("com.worldline.payment.action.PROCESS_TRANSACTION");
+
+// Add required extras
+Bundle extras = new Bundle();
+extras.putString("WPI_SERVICE_TYPE", "PURCHASE");
+extras.putLong("WPI_AMOUNT", 1000); // Amount in cents
+extras.putString("WPI_CURRENCY", "EUR");
+extras.putString("WPI_SESSION_ID", UUID.randomUUID().toString());
+
+paymentIntent.putExtras(extras);
+
+// Start payment activity
+startActivityForResult(paymentIntent, PAYMENT_REQUEST_CODE);
+```
+
+---
+
+## Data Dictionary
+
+### Common Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `WPI_SERVICE_TYPE` | String | Type of transaction (PURCHASE, REFUND, etc.) |
+| `WPI_AMOUNT` | Long | Transaction amount in smallest currency unit |
+| `WPI_CURRENCY` | String | ISO 4217 currency code |
+| `WPI_SESSION_ID` | String | Unique session identifier |
+| `WPI_VERSION` | String | WPI version being used |
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `WPI_RESULT_CODE` | Integer | Result code of the operation |
+| `WPI_AUTHORIZATION_CODE` | String | Authorization code from acquirer |
+| `WPI_TRANSACTION_ID` | String | Unique transaction identifier |
+| `WPI_RECEIPT` | String | Receipt data |
+
+<Note>
+For the complete data dictionary and all available fields, refer to the official WPI specification document available through your Partner account.
+</Note>

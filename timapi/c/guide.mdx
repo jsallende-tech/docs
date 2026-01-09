@@ -1,0 +1,210 @@
+---
+title: "C SDK Guide"
+description: "TIM API C SDK implementation guide"
+---
+
+# TIM API C SDK Guide
+
+## Introduction
+
+The TIM API C SDK is the standard application interface for ECR integration using Worldline terminals. This guide covers the C language implementation.
+
+TIM API provides a comprehensive feature set to support the requirements of several different markets. This guideline is intended to be used by ECR integrators implementing TIM API functionality in their products.
+
+---
+
+## Setup Configuration
+
+The configuration of the terminal can be done by creating and configuring a `terminal_settings` instance. This instance must then be passed to the `terminal_create` function.
+
+<Note>
+Once a terminal instance has been created with a `terminal_settings` instance, the settings cannot be changed anymore. Changes to the `terminal_settings` instance will be ignored.
+</Note>
+
+### Network Configuration
+
+Depending on the platform used, the TIM API module can communicate with the terminal over different communication channels. The default communication is over TCP/IP connection (default port: 7784).
+
+For TCP/IP connection, there are two possible ways to connect:
+
+<Tabs>
+  <Tab title="Broadcast Mode">
+    - Terminal ID (TID) is known
+    - The TIM API starts broadcasting on the default interface
+    - Connects to the connection information sent by the matching terminal
+  </Tab>
+  <Tab title="Direct Connect">
+    - IP address of the terminal is known
+    - Connection is established directly via IP
+  </Tab>
+</Tabs>
+
+### Guides Configuration
+
+Various guides cover different use case scenarios. The `retail` guide is the basic guide and is activated by default.
+
+```c
+ta_object_t terminal = ta_object_invalid;
+ta_object_t settings = ta_object_invalid;
+
+// Create terminal settings instance
+ta_terminal_settings_create(&settings);
+
+// Add wanted guides (with bitwise or)
+ta_terminal_settings_set_guides(settings, ta_c_guide_retail | ta_c_guide_dialog);
+
+// Create terminal
+ta_terminal_create(&terminal, settings);
+
+// Release terminal settings
+ta_object_release(settings);
+
+// ... use terminal ...
+
+// In the end, release terminal as well
+ta_object_release(terminal);
+```
+
+---
+
+## Operation Overview
+
+Follow these basic steps for using the TIM API:
+
+<Steps>
+  <Step title="Create Terminal Settings">
+    Create `terminal_settings` and initialize connection parameters.
+  </Step>
+  <Step title="Create Terminal Instance">
+    Create `terminal` instance using the created `terminal_settings`.
+  </Step>
+  <Step title="Set Properties">
+    Configure required properties:
+    - Define a POS ID
+    - Create mandatory list of `ecr_info` and add with `ta_terminal_add_ecr_data`
+    - Create list of `print_options` and set with `set_print_options`
+    - Add listeners with `ta_terminal_add_listeners`
+  </Step>
+  <Step title="Connect and Login">
+    Connect and login. This can be done automatically when the first terminal operation is called, or manually using the login method.
+  </Step>
+  <Step title="Use Terminal Operations">
+    Execute terminal operation functions as needed.
+  </Step>
+</Steps>
+
+---
+
+## Automatisms
+
+The TIM API uses two different types of automatisms:
+
+### Pre-Automatisms
+
+Actions performed automatically before a function can be called. For example, a transaction can be called in disconnected state without having called connect, login, and activate in advance. These are called automatically by the TIM API.
+
+<Note>
+Pre-Automatisms are enabled by default and cannot be disabled.
+</Note>
+
+### Post-Automatisms
+
+Actions triggered after an operation has been performed. Controlled by:
+
+| Setting | Description |
+|---------|-------------|
+| `auto_commit` | Automatically performs a commit after a transaction |
+| `fetch_brands` | Automatically calls application_information after connect |
+
+Both are enabled by default.
+
+---
+
+## Use Cases
+
+### Manual PAN Key Entry
+
+The TIM API offers the possibility to perform Manual PAN Key Entry (MPKE) on ECR side when no physical card is present.
+
+Set the `card_ref` field in the `transaction_data` container with the format:
+```
+"061234567801234567"
+```
+Where "06" is the prefix defining the content type (non-PCI PAN).
+
+<Warning>
+MPKE on the ECR is only allowed for non-PCI brands. Manual entry for PCI brands must only be performed on the PIN Pad.
+</Warning>
+
+### Retail Guide
+
+The basic retail guide supports standard payment operations:
+
+- Purchase transactions
+- Refunds
+- Reversals
+- Reconciliation
+
+### Additional Guides
+
+<AccordionGroup>
+  <Accordion title="Petrol Guide">
+    Additional methods and transaction types for petrol stations including basket handling, indoor/outdoor scenarios, and online/offline card support.
+  </Accordion>
+  <Accordion title="Unattended Guide">
+    Features for vending machines and unattended terminals including partial commit, hold commit, and amount adjustment.
+  </Accordion>
+  <Accordion title="Banking Guide">
+    Banking-specific operations including balance inquiry, client identification, and account operations.
+  </Accordion>
+  <Accordion title="Dialog Guide">
+    UI dialog functions for collecting input from cardholders.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## C Language Specifics
+
+### Objects in TIM API C
+
+All TIM API objects use the `ta_object_t` type. Objects must be created using appropriate create functions and released when no longer needed.
+
+### Memory Management
+
+```c
+ta_object_t obj = ta_object_invalid;
+
+// Create object
+ta_xxx_create(&obj);
+
+// Use object...
+
+// Release object when done
+ta_object_release(obj);
+```
+
+<Warning>
+Always release objects when they are no longer needed to prevent memory leaks.
+</Warning>
+
+### Data Types
+
+| TIM API Type | C Type | Description |
+|--------------|--------|-------------|
+| `ta_object_t` | `void*` | Generic object handle |
+| `ta_e_result_code` | `int` | Result code enumeration |
+| `ta_c_guide_*` | `int` | Guide constants |
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="C SDK Appendix" icon="book" href="/timapi/c/appendix">
+    Additional reference material
+  </Card>
+  <Card title="Version History" icon="clock-rotate-left" href="/timapi/version-history">
+    SDK version history
+  </Card>
+</CardGroup>

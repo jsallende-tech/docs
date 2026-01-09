@@ -1,0 +1,142 @@
+---
+title: "Custom UI Guide"
+description: "Display customized screens on Terminal API devices"
+---
+
+# Terminal API Custom User Interface Guide
+
+This document provides a step-by-step guide for merchants who manage POS and ECR systems and use the Terminal API app, and want to display a customized screen on the terminal when certain actions are triggered.
+
+The screens are fully customizable and can support a wide range of use cases tailored to customer needs. Think of them as white-label interfaces whose content you can adapt to present information in different ways.
+
+## Typical Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Confirmations" icon="check-circle">
+    Promotional messages with title, subtitle, description, and action buttons to capture user decisions.
+  </Card>
+  <Card title="Single Selection" icon="list">
+    Single-choice selection from a list, with optional icons and unique ID per option.
+  </Card>
+  <Card title="Multiple Selection" icon="list-check">
+    Multiple selections from a list (checkbox-style) with icons and configurable actions.
+  </Card>
+  <Card title="Custom Images" icon="image">
+    Show promo or branding images with configurable button colors.
+  </Card>
+  <Card title="QR Codes" icon="qrcode">
+    Display a QR code for scanning to enroll, access resources, or connect to services.
+  </Card>
+  <Card title="Data Capture" icon="keyboard">
+    Collect data such as email, phone number, ZIP code, or tip amount with validation.
+  </Card>
+</CardGroup>
+
+## General Usage
+
+These screens are displayed in response to HTTP requests from an external system (e.g., a Point-of-Sale system, a remote server, ECR, or a tool like Postman). They will appear automatically when you send an HTTP request to the Terminal API with a proper payload body.
+
+### Request and Interaction Flow
+
+<Steps>
+  <Step title="Send Request">
+    The external system sends a POST HTTP request to the terminal API endpoint.
+  </Step>
+  <Step title="Include Credentials">
+    Include a valid `umid` and `utid` with the authorization token.
+  </Step>
+  <Step title="Build Request Body">
+    The request body must contain a NEXO body with `SaleToPOIDeviceRequest` object containing `Header` and `DeviceRequest` objects.
+  </Step>
+  <Step title="Specify Screen">
+    Include an `InputRequest` object inside `DeviceRequest` and specify the screen type in `DisplayOutput -> MessageContent`.
+  </Step>
+  <Step title="Display Screen">
+    The TAPI app will display the corresponding screen immediately.
+  </Step>
+  <Step title="User Interaction">
+    User views information, makes selections, or enters data as prompted.
+  </Step>
+  <Step title="Receive Response">
+    Once the interaction is complete, the application sends a response back to the external system.
+  </Step>
+</Steps>
+
+## Example Request
+
+```bash
+curl --location 'https://api.terminal.iacc.global.worldline-solutions.com/api/v1/merchants/{umid}/terminals/{utid}/tapi' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer YOUR_TOKEN' \
+--data '{
+    "SaleToPOIDeviceRequest": {
+        "Header": {
+            "MessageFunction": "SDDR",
+            "ProtocolVersion": "5.0-WL1.0",
+            "ExchangeIdentification": "440",
+            "CreationDateTime": "2020-05-04T18:13:51.0+01:00",
+            "InitiatingParty": {
+                "Identification": "SaleTermA",
+                "Type": "MERC"
+            }
+        },
+        "DeviceRequest": {
+            "InputRequest": {
+                "DisplayOutput": {
+                    "MessageContent": {
+                        "InfoScreen": {
+                            "ShowLogo": true,
+                            "BackgroundColor": "#6200EE",
+                            "ButtonColor": "#3700B3",
+                            "Title": "Do you want to redeem your loyalty card?",
+                            "Subtitle": "You currently have enough points for a 2.50 EUR discount",
+                            "PrimaryButton": {
+                                "ButtonId": "first_button",
+                                "ButtonContent": "Yes"
+                            },
+                            "SecondaryButton": {
+                                "ButtonId": "second_button",
+                                "ButtonContent": "No"
+                            }
+                        }
+                    }
+                },
+                "InputData": {
+                    "InputCommand": "GetAnyKey",
+                    "MaximumInputTime": "30000"
+                }
+            }
+        }
+    }
+}'
+```
+
+## Available Screen Types
+
+| Screen Type | Description |
+|-------------|-------------|
+| **InfoScreen** | Basic information display with title, subtitle, text, and action buttons |
+| **ImageInfoScreen** | Shows an image with texts for transaction status screens |
+| **MultiOptionSingleSelectionScreen** | Single-choice interface with multiple options and custom icons |
+| **QRScreen** | Displays a QR code for easy scanning |
+| **InfoTableScreen** | Presents structured data in a table or formatted list |
+| **SignatureScreen** | Digital signature capture area for approvals |
+| **ImageScreen** | Shows a base64-encoded image only |
+| **MultiOptionMultipleSelectionScreen** | Multiple-choice interface with checkbox-style selection |
+| **CaptureDataScreen** | Data input interface with built-in validation |
+
+## Customization Fields
+
+### Common Fields
+
+| Field | Description |
+|-------|-------------|
+| `ShowLogo` | Optional boolean to show Worldline logo at top of screen |
+| `Title` | **Mandatory** - The main heading for the screen |
+| `Subtitle` | Optional additional information or sub-heading |
+| `BackgroundColor` | Custom background color (hex format) |
+| `ButtonColor` | Custom button color (hex format) |
+
+<Card title="Full API Specifications" icon="book" href="/terminal-api-reference">
+  View all available fields and screen configurations in the API specifications
+</Card>

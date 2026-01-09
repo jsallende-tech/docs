@@ -1,0 +1,123 @@
+---
+title: "Understanding Our Protocol"
+description: "How to structure, send, and process payment requests with Terminal API"
+---
+
+# Understanding Our Protocol
+
+Understand how to correctly structure, send, and process payment requests with Terminal API's protocol.
+
+## Overview
+
+Terminal API follows the **Nexo Retailer v5.1** standard for all message structures. This ensures interoperability and compliance with industry standards.
+
+## Message Structure
+
+All Terminal API messages follow a consistent structure:
+
+```json
+{
+  "SaleToPOIServiceRequest": {
+    "Header": {
+      // Message metadata
+    },
+    "ServiceRequest": {
+      // Transaction details
+    }
+  }
+}
+```
+
+## Header Object
+
+The header contains essential metadata for every request:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| `MessageFunction` | Type of request (e.g., `SaleFinancialServiceRequest`) | Yes |
+| `ProtocolVersion` | API version (e.g., `5.1-WL1.0.0`) | Yes |
+| `ExchangeIdentification` | Unique request identifier | Yes |
+| `CreationDateTime` | ISO 8601 timestamp | Yes |
+| `InitiatingParty` | Identifies the requesting party | Yes |
+
+## Service Request Object
+
+The service request contains transaction-specific data:
+
+```json
+{
+  "ServiceContent": "FinancialPaymentRequest",
+  "PaymentRequest": {
+    "PaymentTransaction": {
+      "TransactionType": "CardPayment",
+      "TransactionIdentification": {
+        "TransactionDateTime": "2024-11-15T10:30:00.0+01:00",
+        "TransactionReference": "R26197055"
+      },
+      "TransactionDetails": {
+        "Currency": "EUR",
+        "TotalAmount": 100
+      }
+    }
+  }
+}
+```
+
+## Transaction Types
+
+| Type | Description |
+|------|-------------|
+| `CardPayment` | Standard card payment |
+| `Refund` | Return funds to cardholder |
+| `PreAuthorisation` | Reserve funds on card |
+| `Completion` | Complete a pre-authorization |
+| `Cancellation` | Cancel a previous transaction |
+
+## Response Structure
+
+Responses follow a similar pattern:
+
+```json
+{
+  "SaleToPOIServiceResponse": {
+    "Header": {
+      // Response metadata
+    },
+    "ServiceResponse": {
+      "Response": {
+        "Result": "Success",
+        "ErrorCondition": null
+      },
+      "PaymentResponse": {
+        // Transaction result details
+      }
+    }
+  }
+}
+```
+
+## Response Codes
+
+| Result | Description |
+|--------|-------------|
+| `Success` | Transaction completed successfully |
+| `Failure` | Transaction failed |
+| `Partial` | Partial completion (for split payments) |
+
+## Error Handling
+
+When errors occur, the response includes an `ErrorCondition`:
+
+```json
+{
+  "Response": {
+    "Result": "Failure",
+    "ErrorCondition": "PaymentRestriction",
+    "AdditionalResponse": "Card not accepted"
+  }
+}
+```
+
+<Card title="API Reference" icon="book" href="/terminal-api-reference">
+  View complete message specifications and examples
+</Card>

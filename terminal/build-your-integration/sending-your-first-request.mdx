@@ -1,0 +1,159 @@
+---
+title: "Sending Your First Request"
+description: "Guide to sending your first payment request to Terminal API"
+---
+
+# Sending Your First Request
+
+## Introduction
+
+This page guides you through sending your first simple request to the Worldline Terminal API. We'll demonstrate a synchronous payment request - the most common operation you'll perform.
+
+<Note>
+While this guide uses synchronous requests for their simplicity and ease of understanding, **asynchronous requests are the preferred approach for production environments** due to their better performance and reliability characteristics.
+</Note>
+
+For this example, we'll use the integration environment:
+
+```
+https://api.terminal.iacc.global.worldline-solutions.com
+```
+
+## Prerequisites
+
+To get your terminal ready for API integration:
+
+1. **Physical Setup:** Ensure your terminal is powered on and connected to the internet via Ethernet or Wi-Fi.
+2. **Terminal Registration:** Your terminal must be registered with Worldline and assigned a unique terminal ID.
+3. **Configuration:** The terminal should be configured with the correct integration environment settings.
+4. **Network Access:** Verify that your terminal can reach the API endpoints and has proper firewall permissions.
+
+<Card title="Terminal Setup Guide" icon="gear" href="/terminal/build-your-integration/how-to-setup-your-terminal">
+  For detailed terminal setup instructions, including configuration steps and troubleshooting.
+</Card>
+
+### Required Information
+
+Before making your first API request, ensure you have:
+
+- **Terminal ID:** The unique identifier assigned to your registered terminal.
+- **API Credentials:** Your integration environment API key and authentication details.
+- **Network Configuration:** Confirmed connectivity between your terminal and the API endpoints.
+
+## The Payment Request Endpoint
+
+To process a payment, you'll send a POST request to:
+
+```
+/api/v1/merchants/{MERCHANT_ID}/terminals/{TERMINAL_ID}/payments/sync
+```
+
+**Path parameters:**
+- `{MERCHANT_ID}` – Your merchant identifier.
+- `{TERMINAL_ID}` – The terminal identifier processing the transaction.
+
+## Request Headers
+
+Your request must include these HTTP headers:
+
+| Header | Value |
+|--------|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {YOUR_TOKEN} |
+
+## Request Body Structure
+
+The request body contains a `SaleToPOIServiceRequest` object with two main components:
+
+### Core Components
+
+<AccordionGroup>
+  <Accordion title="Header Object">
+    Contains message metadata:
+    - Identifies the message type and version
+    - Provides unique identifiers for request tracking
+    - Specifies the initiating party
+  </Accordion>
+  <Accordion title="ServiceRequest Object">
+    Contains transaction details:
+    - Defines the payment amount and currency
+    - Includes transaction references
+    - Specifies the transaction type
+  </Accordion>
+</AccordionGroup>
+
+### Essential Fields
+
+| Field | Description | Example Value |
+|-------|-------------|---------------|
+| MessageFunction | Type of request being made | "SaleFinancialServiceRequest" |
+| ProtocolVersion | API protocol version | "5.1-WL1.0.0" |
+| Currency | ISO 4217 currency code | "EUR" |
+| TotalAmount | Transaction amount | 100 |
+
+## Complete Example Request
+
+```bash
+curl --location 'https://api.terminal.iacc.global.worldline-solutions.com/api/v1/merchants/YOUR_MERCHANT_ID/terminals/YOUR_TERMINAL_ID/payments/sync' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer YOUR_TOKEN' \
+--data '{
+  "SaleToPOIServiceRequest": {
+    "Header": {
+      "MessageFunction": "SaleFinancialServiceRequest",
+      "ProtocolVersion": "5.1-WL1.0.0",
+      "ExchangeIdentification": "642",
+      "CreationDateTime": "2024-11-15T10:30:00.0+01:00",
+      "InitiatingParty": {
+        "Identification": "YOUR_MERCHANT_ID",
+        "Type": "Merchant"
+      }
+    },
+    "ServiceRequest": {
+      "ServiceContent": "FinancialPaymentRequest",
+      "PaymentRequest": {
+        "PaymentTransaction": {
+          "TransactionType": "CardPayment",
+          "TransactionIdentification": {
+            "TransactionDateTime": "2024-11-15T10:30:00.0+01:00",
+            "TransactionReference": "R26197055"
+          },
+          "TransactionDetails": {
+            "Currency": "EUR",
+            "TotalAmount": 100
+          }
+        }
+      }
+    }
+  }
+}'
+```
+
+## What Happens Next
+
+Once your request is received, the Terminal API will:
+
+1. Send a request to the terminal over WebSocket to initiate the payment.
+2. Wait for the terminal to process the transaction.
+3. Return the response to your API call.
+
+## Response Status Codes
+
+| Status | Description |
+|--------|-------------|
+| HTTP 2XX | Request successfully received and sent to terminal for processing |
+| HTTP 400 | Invalid request format or parameters |
+| HTTP 401 | Authentication failed |
+| HTTP 404 | Not Found (unknown MERCHANT_ID or TERMINAL_ID, or terminal not connected) |
+| HTTP 500 | Server error |
+
+The response body will contain transaction results and status information.
+
+## Quick Checklist
+
+Before sending your request, verify:
+
+- [ ] Valid merchant and terminal IDs are inserted
+- [ ] Bearer token is valid
+- [ ] `TotalAmount` value is correct for your transaction
+- [ ] `CreationDateTime` and `TransactionDateTime` use ISO 8601 format

@@ -1,0 +1,79 @@
+---
+title: "SmartPOS API 1.7"
+description: "SmartPOS API version 1.7 specification"
+---
+
+# SmartPOS API Version 1.7
+
+The SmartPOS API 1.7 provides comprehensive access to terminal information and services.
+
+## Overview
+
+This version of the SmartPOS API includes:
+
+- Terminal identification methods
+- Merchant information retrieval
+- Device capability queries
+- System service integration
+
+## Service Connection
+
+```java
+// Bind to SmartPOS API service
+private ServiceConnection serviceConnection = new ServiceConnection() {
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        smartPosApi = ISmartPosApi.Stub.asInterface(service);
+        // Service is ready to use
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        smartPosApi = null;
+    }
+};
+
+// Connect to service
+Intent intent = new Intent();
+intent.setAction("com.worldline.smartpos.api.SERVICE");
+intent.setPackage("com.worldline.smartpos");
+bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+```
+
+## Available Methods
+
+| Method | Description |
+|--------|-------------|
+| `getTerminalId()` | Returns the terminal identifier |
+| `getMerchantId()` | Returns the merchant identifier |
+| `getSerialNumber()` | Returns the device serial number |
+| `getSoftwareVersion()` | Returns the SmartPOS software version |
+| `getDeviceModel()` | Returns the terminal model |
+
+## Best Practices
+
+<Warning>
+Remember to close the service connection as soon as you have retrieved the information you need to avoid memory leaks and resource consumption.
+</Warning>
+
+```java
+// Always unbind when done
+@Override
+protected void onDestroy() {
+    super.onDestroy();
+    if (smartPosApi != null) {
+        unbindService(serviceConnection);
+    }
+}
+```
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Start Developing" icon="code" href="/smartpos/app-development/index">
+    Development best practices
+  </Card>
+  <Card title="WPI Documentation" icon="plug" href="/smartpos/wpi/index">
+    Payment integration with WPI
+  </Card>
+</CardGroup>

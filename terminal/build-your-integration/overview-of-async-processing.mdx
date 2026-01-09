@@ -1,0 +1,108 @@
+---
+title: "Overview of Async Processing"
+description: "Guide to asynchronous payment processing with Terminal API"
+---
+
+# Overview of Asynchronous Payment Processing
+
+This guide outlines the asynchronous terminal payment API, explains its functionality, and describes how to use it.
+
+## Why Use Asynchronous Processing?
+
+<Note>
+Asynchronous requests are the **preferred approach for production environments** due to their better performance and reliability characteristics.
+</Note>
+
+Benefits of asynchronous processing:
+
+<CardGroup cols={2}>
+  <Card title="Better Performance" icon="gauge-high">
+    Non-blocking operations allow your system to handle more requests
+  </Card>
+  <Card title="Improved Reliability" icon="shield-check">
+    Built-in retry mechanisms and webhook notifications
+  </Card>
+  <Card title="Scalability" icon="arrows-up-down">
+    Handle high volumes of transactions efficiently
+  </Card>
+  <Card title="Flexibility" icon="shuffle">
+    Process multiple transactions in parallel
+  </Card>
+</CardGroup>
+
+## How It Works
+
+<Steps>
+  <Step title="Submit Request">
+    Send your payment request to the async endpoint.
+  </Step>
+  <Step title="Receive Acknowledgment">
+    Get an immediate HTTP response confirming receipt.
+  </Step>
+  <Step title="Processing">
+    The terminal processes the transaction in the background.
+  </Step>
+  <Step title="Receive Notification">
+    Get the result via webhook callback or poll for status.
+  </Step>
+</Steps>
+
+## Async Endpoint
+
+```
+POST /api/v1/merchants/{MERCHANT_ID}/terminals/{TERMINAL_ID}/payments
+```
+
+Unlike the sync endpoint (`/payments/sync`), the async endpoint returns immediately with an acknowledgment.
+
+## Request Headers for Async Calls
+
+Additional headers for asynchronous operations:
+
+| Header | Description |
+|--------|-------------|
+| `WebhookUrl` | URL to receive the transaction result |
+| `NumberOfRetries` | Number of retry attempts if initial delivery fails |
+
+## Webhook Integration
+
+Configure your webhook endpoint to receive transaction results:
+
+```json
+{
+  "SaleToPOIServiceResponse": {
+    "Header": {
+      "MessageFunction": "SaleFinancialServiceResponse",
+      "ProtocolVersion": "5.1-WL1.0.0",
+      "ExchangeIdentification": "642"
+    },
+    "ServiceResponse": {
+      "Response": {
+        "Result": "Success",
+        "ErrorCondition": null
+      }
+    }
+  }
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Implement Idempotency">
+    Use unique `ExchangeIdentification` values to prevent duplicate processing.
+  </Accordion>
+  <Accordion title="Handle Webhook Failures">
+    Implement retry logic and fallback to polling if webhooks fail.
+  </Accordion>
+  <Accordion title="Monitor Timeouts">
+    Set appropriate timeout values based on your transaction complexity.
+  </Accordion>
+  <Accordion title="Secure Your Webhook">
+    Validate webhook signatures and use HTTPS endpoints only.
+  </Accordion>
+</AccordionGroup>
+
+<Card title="Sending Your First Request" icon="paper-plane" href="/terminal/build-your-integration/sending-your-first-request">
+  Start with synchronous requests to understand the basics
+</Card>

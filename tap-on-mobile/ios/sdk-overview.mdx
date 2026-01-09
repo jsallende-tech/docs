@@ -1,0 +1,67 @@
+---
+title: "iOS SDK Overview"
+description: "Tap on Mobile iOS SDK documentation"
+---
+
+# iOS SDK Overview
+
+Native iOS SDK for Tap on Mobile payment acceptance on iPhone and iPad.
+
+## System Requirements
+
+- iOS 12.0 or later
+- iPhone 7 or later (NFC capable devices)
+- Xcode 14+
+
+## Installation
+
+### Swift Package Manager
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/worldline/tap-on-mobile-ios.git", from: "1.0.0")
+]
+```
+
+### CocoaPods
+
+```ruby
+pod 'WorldlineTapOnMobile'
+```
+
+## Quick Start
+
+```swift
+import TapOnMobile
+
+class PaymentHandler {
+    private var tapOnMobile: TapOnMobile?
+
+    func setup() {
+        let config = TapOnMobileConfig(
+            merchantId: "YOUR_MERCHANT_ID",
+            terminalId: "YOUR_TERMINAL_ID"
+        )
+
+        tapOnMobile = TapOnMobile(config: config)
+    }
+
+    func startPayment(amount: Int, currency: String) {
+        tapOnMobile?.startPayment(
+            amount: amount,
+            currency: currency
+        ) { result in
+            switch result {
+            case .success(let response):
+                print("Payment successful")
+            case .failure(let error):
+                print("Payment failed: \(error)")
+            }
+        }
+    }
+}
+```
+
+<Note>
+Contact your Worldline Partner Manager for complete SDK documentation and credentials.
+</Note>

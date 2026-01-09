@@ -1,0 +1,106 @@
+---
+title: "Navigating the API Reference"
+description: "How to interpret, explore, and implement the Terminal API efficiently"
+---
+
+# Navigating the API Reference
+
+## Overview
+
+The **Terminal API Reference** defines the message structure and endpoints used to communicate with Worldline payment terminals following the **Nexo Retailer v5.1** standard.
+
+This section helps developers understand how to interpret, explore, and implement the API efficiently — from sending their first `SaleToPOIServiceRequest` to managing terminal status or reconciliation flows.
+
+## Structure and Navigation
+
+The reference is organized around **functional areas**:
+
+- **Payments** – Standard and asynchronous payment requests, pre-authorizations, and refunds
+- **Admin** – Administrative or configuration-related actions
+- **Deprecated** – Legacy endpoints retained for backward compatibility
+
+Use the **sidebar** to explore endpoints by tag or search directly by keyword (e.g., `Reconciliation`, `Abort`, `DeviceRequest`).
+
+## Reading Endpoint Details
+
+Each endpoint entry includes:
+
+| Section | Description |
+|---------|-------------|
+| HTTP Method & Path | For example: `POST /api/v1/merchants/{umid}/terminals/{utid}/payments` |
+| Summary & Description | Clarifying when and why to use the endpoint |
+| Parameters | `umid` and `utid` identify the merchant and terminal |
+| Security | All calls require a JWT bearer token |
+| Request Body | Must contain a valid Nexo message, such as `SaleToPOIServiceRequest` |
+| Response | Structured according to Nexo response messages |
+| Examples | Real payloads demonstrating request/response behavior |
+
+<Note>
+Because Nexo messages encapsulate both the **Header** and **Body**, pay close attention to required fields such as `MessageHeader`, `MessageType` and transaction-specific blocks.
+
+Some headers, like `NumberOfRetries` or `WebhookUrl`, are only applicable for asynchronous calls.
+</Note>
+
+## Schemas and Objects
+
+The **Schemas** section defines every object used by the API — from `Card` and `POI` data structures to complex nested types like `SaleToPOIAdministrativeRequest`.
+
+Each schema includes:
+
+- **Type and format** (e.g., `string`, `int32`)
+- **Required fields**
+- **Field descriptions or enumerations** (e.g., `MerchantReceipt` or `CardholderReceipt` destinations)
+- **References** to related request/response objects
+
+Understanding these data models is key to creating valid Nexo-compliant payloads.
+
+## Searching and Filtering
+
+You can quickly locate any element via the search bar in the API interface.
+
+Use keywords such as:
+
+- Endpoint names (`/payments`, `/abort`)
+- Object names (`SaleToPOIServiceRequest`)
+- Schema components (`Card`, `POI`, `Capabilities`)
+
+Search results display both endpoints and object definitions, allowing you to trace a property from schema to endpoint.
+
+## Versioning and Deprecation
+
+This documentation covers **Terminal API version 5.1-WL1.0.0**, aligned with **Nexo Retailer 5.1**.
+
+<Warning>
+Endpoints marked under the _Deprecated_ tag remain accessible but should not be used in new implementations.
+</Warning>
+
+Always review the [Release Notes](/terminal/release-notes) for updates or migration notes when a new release becomes available.
+
+## Implementation Tips
+
+<AccordionGroup>
+  <Accordion title="Start with the Guides">
+    Understand the transaction lifecycle before exploring the reference.
+  </Accordion>
+  <Accordion title="Validate Your Payloads">
+    Validate against the schema definitions to ensure Nexo compliance.
+  </Accordion>
+  <Accordion title="Test in Integration">
+    Use the base URL `https://api.terminal.iacc.global.worldline-solutions.com` before switching to Production.
+  </Accordion>
+  <Accordion title="Handle 4xx Responses Gracefully">
+    These usually indicate message delivery or schema validation issues. See the [FAQ](/terminal/faq) for troubleshooting.
+  </Accordion>
+  <Accordion title="Monitor Timeouts and Retries">
+    Especially important for asynchronous endpoints.
+  </Accordion>
+</AccordionGroup>
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/terminal-api-reference">
+    Explore live schemas and examples
+  </Card>
+  <Card title="Release Notes" icon="clipboard-list" href="/terminal/release-notes">
+    Follow version updates and new releases
+  </Card>
+</CardGroup>

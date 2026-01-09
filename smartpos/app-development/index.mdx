@@ -1,0 +1,79 @@
+---
+title: "Start Developing"
+description: "Best practices and guidelines for SmartPOS app development"
+---
+
+# Start Developing
+
+**It's simple for SmartPOS**
+
+Here are some recommendations of best practices for developing apps on the SmartPOS platform:
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Read the Documentation">
+    Start by reading the [WPI documentation](/smartpos/wpi/index) provided by Worldline. This will give you an overview of the interface and the steps required to integrate it into your app.
+  </Accordion>
+  <Accordion title="Use a Development Environment">
+    Use a development environment that supports Android development, such as Android Studio. This will provide you with the tools you need to build and test your app.
+  </Accordion>
+  <Accordion title="Use the Latest Version of WPI">
+    Always use the latest version of WPI to ensure that you have access to the latest features.
+  </Accordion>
+  <Accordion title="Test on a SmartPOS Device">
+    Test your app on a SmartPOS device to ensure that it works as expected. This will help you identify any issues early in the development process.
+  </Accordion>
+  <Accordion title="Follow Security Best Practices">
+    Ensure GDPR and PCI compliance throughout your development process.
+  </Accordion>
+  <Accordion title="Handle Errors Gracefully">
+    Ensure that your app handles errors gracefully. This includes displaying appropriate error messages to the user and logging errors for troubleshooting purposes.
+  </Accordion>
+  <Accordion title="Use a Modular Architecture">
+    Consider using a modular architecture for your app, which can make it easier to maintain and update in the future.
+  </Accordion>
+  <Accordion title="Implement Unit and Integration Testing">
+    Implement unit and integration testing for your app to ensure that it works as expected and to catch any issues before they make it into production.
+  </Accordion>
+</AccordionGroup>
+
+## Development Best Practices
+
+- **Efficient memory usage**: Efficiently manage and release resources that are no longer needed, close cursors, release bitmaps and any other resource that can cause memory leaks. In the case of SmartPOS API service, close the service connection as soon as you retrieved the information you need. Look out for minimizing network usage by implementing efficient caching techniques. For discovering potential leaks in your application, you can check the [LeakCanary library](https://square.github.io/leakcanary/).
+
+- **Error handling**: Implement proper error handling and exception management to provide robust user experience. Gracefully handle exceptions to prevent app crashes and provide meaningful error messages to users (efficiently log unhandled exceptions).
+
+- **Shrink, obfuscate and optimize your release application**: [Android Developer Guide](https://developer.android.com/build/shrink-code)
+
+- **Follow Android core app quality recommendations**: [Android Quality Guidelines](https://developer.android.com/docs/quality-guidelines/core-app-quality)
+
+<Warning>
+**Important Information**
+
+1. Screens with dynamic loaded text from any external resource in combination with an input field are **not allowed**.
+2. **Web-view** technology is allowed under [strict legal conditions](/smartpos/app-development/web-view).
+</Warning>
+
+## Detailed Information
+
+<CardGroup cols={2}>
+  <Card title="Security" icon="shield" href="/smartpos/security">
+    Security guidelines and requirements
+  </Card>
+  <Card title="Using WPI" icon="plug" href="/smartpos/wpi/index">
+    Worldline Payment Interface documentation
+  </Card>
+  <Card title="Using SmartPOS API" icon="code" href="/smartpos/smartpos-api/index">
+    SmartPOS API documentation
+  </Card>
+  <Card title="Using Web-view" icon="globe" href="/smartpos/app-development/web-view">
+    Legal conditions for WebView usage
+  </Card>
+  <Card title="Testing Application" icon="flask" href="/smartpos/app-development/app-testing">
+    App testing guidelines
+  </Card>
+  <Card title="Certification" icon="certificate" href="/smartpos/app-development/app-certification">
+    Terminal certification process
+  </Card>
+</CardGroup>

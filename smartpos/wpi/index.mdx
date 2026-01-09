@@ -1,0 +1,66 @@
+---
+title: "WPI Overview"
+description: "Worldline Payment Interface (WPI) - Intent-Based Interface for SmartPOS"
+---
+
+# WPI Overview
+
+The Worldline Payment Interface (WPI) Intent-Based Interface is a type of API that allows for seamless integration between business applications and different payment protocols for the purpose of processing payment transactions.
+
+This interface enables business apps to communicate with the payment application by using predefined intents, making it easy to process payments without the need for manual data entry.
+
+## Why You Should Use WPI
+
+WPI provides several important advantages when it comes to development of applications implementing payment functionality:
+
+<CardGroup cols={3}>
+  <Card title="Simplified Implementation" icon="code">
+    Removes significant complexity and compatibility issues related to different payment applications
+  </Card>
+  <Card title="Cross-Device Compatibility" icon="mobile">
+    Use the same version of an application with multiple device models and protocols
+  </Card>
+  <Card title="Structured Approach" icon="layer-group">
+    Provides structured approach on how payment and business applications interact with each other
+  </Card>
+</CardGroup>
+
+## How to Use WPI
+
+The Intent-Based Interface works by defining a set of intents that specify the payment information required to process a payment. These intents can be sent from one app to another, allowing the payment processing app to retrieve the required information and process the payment. The data is transmitted between the two apps using a secure channel, ensuring that sensitive payment information is protected.
+
+To integrate WPI Intent-Based Interface into your app, you will need to:
+
+1. Define the intents required for payment processing
+2. Include the amount to be paid, the payment method, and any other relevant payment details
+3. Send these intents to the payment processing app
+4. The payment processing app retrieves the information and processes the payment
+
+## Supported Devices
+
+WPI is currently available on the following devices offered by Worldline:
+
+| Device | Type |
+|--------|------|
+| Ingenico VALINA | SmartPOS Terminal |
+| Castles Saturn 1F2 | SmartPOS Terminal |
+| Ingenico AXIUM EX8000 | SmartPOS Terminal |
+| Ingenico AXIUM DX8000 | SmartPOS Terminal |
+
+<Note>
+WPI is also available for smartphones as part of the **Tap on Mobile** solution. Please visit the [Tap on Mobile](/tap-on-mobile/index) section for more information.
+</Note>
+
+## WPI Versions
+
+<CardGroup cols={2}>
+  <Card title="WPI Version 2.0" icon="file-code" href="/smartpos/wpi/wpi-version-2-0">
+    Current stable version with full feature set
+  </Card>
+  <Card title="WPI Version 2.1" icon="file-code" href="/smartpos/wpi/wpi-version-2-1">
+    Latest version with additional features
+  </Card>
+  <Card title="WPI Codelabs" icon="flask" href="/smartpos/wpi/wpi-codelabs">
+    Hands-on tutorials and examples
+  </Card>
+</CardGroup>

@@ -1,0 +1,133 @@
+---
+title: "Java SDK Guide"
+description: "TIM API Java SDK implementation guide"
+---
+
+# TIM API Java SDK Guide
+
+## Introduction
+
+The TIM API Java SDK provides a Java implementation for ECR integration with Worldline terminals. This SDK offers the same feature set as the C SDK with Java-specific idioms and patterns.
+
+## Getting Started
+
+### Maven Dependency
+
+Add the TIM API Java SDK to your project:
+
+```xml
+<dependency>
+    <groupId>com.worldline</groupId>
+    <artifactId>timapi-java</artifactId>
+    <version>LATEST</version>
+</dependency>
+```
+
+### Basic Setup
+
+```java
+import com.worldline.timapi.*;
+
+public class TerminalExample {
+    public static void main(String[] args) {
+        // Create terminal settings
+        TerminalSettings settings = new TerminalSettings();
+        settings.setTerminalId("TERMINAL001");
+        settings.setGuides(Guide.RETAIL, Guide.DIALOG);
+
+        // Create terminal instance
+        Terminal terminal = new Terminal(settings);
+
+        // Add listener
+        terminal.addListener(new TerminalListener() {
+            @Override
+            public void onTransactionCompleted(TransactionResponse response) {
+                System.out.println("Transaction completed: " + response.getResult());
+            }
+        });
+
+        // Connect and perform transaction
+        terminal.connect();
+        terminal.login();
+
+        TransactionRequest request = new TransactionRequest();
+        request.setAmount(1000); // Amount in cents
+        request.setCurrency("EUR");
+        request.setTransactionType(TransactionType.PURCHASE);
+
+        terminal.transaction(request);
+    }
+}
+```
+
+## Configuration
+
+### Network Settings
+
+```java
+TerminalSettings settings = new TerminalSettings();
+
+// Broadcast mode (find terminal by ID)
+settings.setTerminalId("TERMINAL001");
+
+// Or direct connect (by IP)
+settings.setConnectionType(ConnectionType.DIRECT);
+settings.setHostAddress("192.168.1.100");
+settings.setHostPort(7784);
+```
+
+### Guide Configuration
+
+```java
+// Enable multiple guides
+settings.setGuides(Guide.RETAIL, Guide.PETROL, Guide.DIALOG);
+```
+
+## Synchronous vs Asynchronous
+
+<Tabs>
+  <Tab title="Synchronous">
+    ```java
+    // Blocks until transaction completes
+    TransactionResponse response = terminal.transaction(request);
+    if (response.getResult() == Result.SUCCESS) {
+        // Transaction successful
+    }
+    ```
+  </Tab>
+  <Tab title="Asynchronous">
+    ```java
+    // Returns immediately, result via listener
+    terminal.transactionAsync(request);
+
+    // Handle result in listener
+    terminal.addListener(new TerminalListener() {
+        @Override
+        public void onTransactionCompleted(TransactionResponse response) {
+            // Process response
+        }
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Error Handling
+
+```java
+try {
+    TransactionResponse response = terminal.transaction(request);
+} catch (TerminalException e) {
+    System.err.println("Error: " + e.getErrorCode() + " - " + e.getMessage());
+}
+```
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="TIMAPI Overview" icon="house" href="/timapi/index">
+    Return to SDK overview
+  </Card>
+  <Card title="Version History" icon="clock-rotate-left" href="/timapi/version-history">
+    SDK version history
+  </Card>
+</CardGroup>

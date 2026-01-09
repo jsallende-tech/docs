@@ -1,0 +1,140 @@
+---
+title: "API Reference"
+description: "Complete Terminal API reference documentation"
+---
+
+# Terminal API Reference
+
+The Terminal API provides a comprehensive REST interface for payment terminal integration.
+
+## OpenAPI Specification
+
+The complete API specification is available for download and integration with your development tools.
+
+<Card title="OpenAPI Specification" icon="file-code" href="https://wjx44tdpp7.execute-api.eu-west-3.amazonaws.com/OpenAPI/terminal-api-openapi-spec/openapi.yaml">
+  Download the OpenAPI YAML specification
+</Card>
+
+## API Base URLs
+
+| Environment | Base URL |
+|-------------|----------|
+| Integration | `https://api.terminal.iacc.global.worldline-solutions.com` |
+| Production | Contact your Partner Manager |
+
+## Authentication
+
+All API requests require authentication via your merchant credentials. Contact your Partner Manager for access credentials.
+
+## Core Endpoints
+
+### Payments
+
+<CardGroup cols={2}>
+  <Card title="Create Payment" icon="credit-card">
+    `POST /api/v1/merchants/{umid}/terminals/{utid}/payments`
+
+    Initiate a new payment transaction
+  </Card>
+  <Card title="Get Payment Status" icon="magnifying-glass">
+    `GET /api/v1/merchants/{umid}/terminals/{utid}/payments/{paymentId}`
+
+    Retrieve payment transaction status
+  </Card>
+  <Card title="Cancel Payment" icon="xmark">
+    `DELETE /api/v1/merchants/{umid}/terminals/{utid}/payments/{paymentId}`
+
+    Cancel a pending payment
+  </Card>
+  <Card title="Refund Payment" icon="rotate-left">
+    `POST /api/v1/merchants/{umid}/terminals/{utid}/refunds`
+
+    Process a refund for a completed payment
+  </Card>
+</CardGroup>
+
+### Terminals
+
+<CardGroup cols={2}>
+  <Card title="Get Terminal Info" icon="display">
+    `GET /api/v1/merchants/{umid}/terminals/{utid}`
+
+    Retrieve terminal configuration and status
+  </Card>
+  <Card title="Update Terminal" icon="gear">
+    `PUT /api/v1/merchants/{umid}/terminals/{utid}`
+
+    Update terminal settings
+  </Card>
+</CardGroup>
+
+### Transactions
+
+<CardGroup cols={2}>
+  <Card title="List Transactions" icon="list">
+    `GET /api/v1/merchants/{umid}/terminals/{utid}/transactions`
+
+    Retrieve transaction history
+  </Card>
+  <Card title="Get Transaction" icon="receipt">
+    `GET /api/v1/merchants/{umid}/terminals/{utid}/transactions/{txId}`
+
+    Get detailed transaction information
+  </Card>
+</CardGroup>
+
+## Path Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `umid` | Unique Merchant ID |
+| `utid` | Unique Terminal ID |
+| `paymentId` | Payment transaction identifier |
+| `txId` | Transaction identifier |
+
+## Response Codes
+
+| Code | Description |
+|------|-------------|
+| `200` | Success |
+| `201` | Created |
+| `400` | Bad Request - Invalid parameters |
+| `401` | Unauthorized - Invalid credentials |
+| `404` | Not Found - Resource doesn't exist |
+| `409` | Conflict - Transaction in progress |
+| `500` | Server Error |
+
+## Using with Development Tools
+
+### Import into Postman
+
+1. Open Postman
+2. Click **Import**
+3. Select **Link** and paste the OpenAPI URL
+4. Configure your environment variables for authentication
+
+### Import into Swagger UI
+
+```bash
+# Using Docker
+docker run -p 8080:8080 -e SWAGGER_JSON_URL=https://wjx44tdpp7.execute-api.eu-west-3.amazonaws.com/OpenAPI/terminal-api-openapi-spec/openapi.yaml swaggerapi/swagger-ui
+```
+
+### Generate Client SDKs
+
+Use OpenAPI Generator to create client libraries:
+
+```bash
+# Install OpenAPI Generator
+npm install @openapitools/openapi-generator-cli -g
+
+# Generate a client (example: TypeScript)
+openapi-generator-cli generate \
+  -i https://wjx44tdpp7.execute-api.eu-west-3.amazonaws.com/OpenAPI/terminal-api-openapi-spec/openapi.yaml \
+  -g typescript-fetch \
+  -o ./terminal-api-client
+```
+
+<Note>
+For detailed API documentation and support, contact your Worldline Partner Manager.
+</Note>

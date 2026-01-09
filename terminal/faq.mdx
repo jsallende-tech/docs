@@ -1,0 +1,88 @@
+---
+title: "FAQ"
+description: "Frequently Asked Questions about Terminal API"
+---
+
+# FAQ
+
+This section includes answers to questions raised during the integration process. If your question isn't listed, please contact [terminalapi@worldline.com](mailto:terminalapi@worldline.com).
+
+## General Questions
+
+<AccordionGroup>
+  <Accordion title="How do I obtain an API key?">
+    API keys can be requested via email by contacting the support team. Ensure that you securely store or delete the email containing the API key to prevent unauthorized access.
+  </Accordion>
+  <Accordion title="How do I use the API key?">
+    Use an Authorization header with value `Bearer <YOUR_API_KEY>`.
+  </Accordion>
+  <Accordion title="What environments are available for testing and production?">
+    The API provides integration and production environments. Use the integration environment for testing purposes with a development terminal to simulate real-world transactions.
+  </Accordion>
+  <Accordion title="Is the Terminal API PCI compliant?">
+    Yes, the API is PCI DSS compliant. No unmasked PCI-related data is accessible through the API, reducing compliance risks.
+  </Accordion>
+  <Accordion title="What should I do if I encounter an authentication error?">
+    Verify that your API key is correct and active. Ensure that the request headers include proper authentication details and that you are using the correct environment URLs.
+  </Accordion>
+  <Accordion title="Can I simulate transactions without affecting real data?">
+    Yes, use the integration environment for testing transactions. It allows you to simulate scenarios without impacting production data.
+  </Accordion>
+</AccordionGroup>
+
+## Transaction Types
+
+<AccordionGroup>
+  <Accordion title="Reversal - Is the password always mandatory?">
+    The password is mandatory when the terminal is set up in standalone mode. It is a limitation of the working mode of the terminal itself that cannot be bypassed by Terminal API.
+
+    If you want to avoid password entry, set the terminal up in ECR Integrated mode, but then you need to print the receipts yourself.
+  </Accordion>
+  <Accordion title="What is CardAcquisition used for?">
+    The common use case is for cardholder identification without an additional transaction. We recommend using the normal payment transaction instead of CardAcquisition unless your use case requires a two-step transaction.
+  </Accordion>
+  <Accordion title="What is ExchangeIdentification used for?">
+    This is a field you can use to identify the request. It's useful for support in case of problems — think of it as a tracing ID.
+  </Accordion>
+  <Accordion title="What values are allowed for AbortReason?">
+    Any string is allowed.
+  </Accordion>
+  <Accordion title="Are there restrictions for TransactionReference?">
+    We recommend a usable value. The invoice ID is a valid choice.
+  </Accordion>
+  <Accordion title="How do I revert only the last transaction?">
+    Use the Reversal request for this.
+  </Accordion>
+  <Accordion title="What's the difference between referenced and unreferenced refunds?">
+    **Referenced refund:**
+    - Linked to a specific original transaction
+    - Uses the original transaction's identification in `OriginalTransaction` to process the refund
+
+    **Unreferenced refund:**
+    - Not tied to any original transaction
+    - `OriginalTransaction` is not used at all
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Invalid API Key">
+    Double-check the API key for any typos. Ensure that the key has not expired or been revoked.
+  </Accordion>
+  <Accordion title="Service Unavailable">
+    Verify your network connection and check the API status page for any reported outages or maintenance.
+  </Accordion>
+  <Accordion title="Transaction Failed">
+    Ensure all required fields are correctly filled in the request payload. Review any error codes in the response for specific issues.
+  </Accordion>
+  <Accordion title="Unexpected error for one particular transaction">
+    When working in test systems, sending a round number as a total amount may trigger special errors. Use numbers with decimals instead.
+  </Accordion>
+</AccordionGroup>
+
+## Need More Help?
+
+<Card title="Contact Support" icon="envelope" href="mailto:terminalAPI@worldline.com">
+  terminalAPI@worldline.com
+</Card>

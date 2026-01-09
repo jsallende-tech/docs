@@ -1,0 +1,79 @@
+---
+title: "Cloud Integration"
+description: "Cloud-to-cloud architecture for Terminal API"
+---
+
+# Cloud Integration
+
+Worldline Terminal API is designed to support modern, cloud-native integrations, enabling secure, scalable, and reliable communication between your backend services and our terminal infrastructure — without the need for local networking or direct terminal access.
+
+## Cloud-to-Cloud Architecture
+
+Terminal API leverages a cloud-to-cloud architecture, meaning that communication between your system and the payment terminal is brokered entirely through secure HTTPS requests from your servers to Worldline's cloud environment.
+
+### Key Architectural Principles
+
+<CardGroup cols={3}>
+  <Card title="Direct API Integration" icon="plug">
+    From your server to Worldline payment terminals — no local server or device middleware required
+  </Card>
+  <Card title="Cloud Routing" icon="cloud">
+    Communication is initiated by your system and relayed through our cloud infrastructure
+  </Card>
+  <Card title="Webhook Delivery" icon="bell">
+    Asynchronous responses via webhooks — no polling required
+  </Card>
+</CardGroup>
+
+## Security Considerations
+
+<AccordionGroup>
+  <Accordion title="HTTPS with HSTS">
+    All API traffic is encrypted via HTTPS, with HTTP Strict Transport Security enforced to prevent downgrade attacks.
+  </Accordion>
+  <Accordion title="API Key Authentication">
+    Each integration uses a unique API key. This key must be sent in every request as a Bearer token:
+    ```
+    Authorization: Bearer <YOUR_API_KEY>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## HTTP Status Codes
+
+When integrating with the Terminal API over HTTPS, your system will receive standard HTTP status codes. Understanding these responses is key to handling retries, error logging, and exception flows.
+
+### Common Status Codes
+
+| HTTP Code | Meaning | When It Occurs |
+|-----------|---------|----------------|
+| 200 OK | Request successfully processed | Request received and sent to terminal |
+| 301 Moved Permanently | Resource has been moved | Rarely used; may appear in test environments |
+| 400 Bad Request | Malformed syntax or invalid parameters | Invalid JSON |
+| 401 Unauthorized | Missing or invalid API key | Incorrect authentication header |
+| 404 Not Found | Endpoint does not exist | Incorrect URLs, API versioning issues, invalid Terminal IDs |
+| 408 Request Timeout | Server timed out | Latency issues |
+| 429 Too Many Requests | Rate limit exceeded | Apply exponential backoff |
+| 500 Internal Server Error | Unexpected server error | Retry with backoff or contact support |
+| 503 Service Unavailable | Temporary unavailability | Check status page or retry later |
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Implement Retry Logic">
+    For 5xx errors and timeouts, implement exponential backoff retry logic.
+  </Accordion>
+  <Accordion title="Handle Rate Limits">
+    Respect 429 responses by implementing proper rate limiting in your client.
+  </Accordion>
+  <Accordion title="Secure Your API Keys">
+    Never expose API keys in client-side code. Store them securely on your servers.
+  </Accordion>
+  <Accordion title="Use Webhooks">
+    For production, prefer asynchronous requests with webhook callbacks.
+  </Accordion>
+</AccordionGroup>
+
+<Card title="Sending Your First Request" icon="paper-plane" href="/terminal/build-your-integration/sending-your-first-request">
+  Get started with your first API request
+</Card>

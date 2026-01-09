@@ -1,0 +1,161 @@
+---
+title: "JavaScript SDK Guide"
+description: "TIM API JavaScript SDK implementation guide"
+---
+
+# TIM API JavaScript SDK Guide
+
+## Introduction
+
+The TIM API JavaScript SDK provides a JavaScript/TypeScript implementation for ECR integration with Worldline terminals. It supports both Node.js and modern browser environments.
+
+## Getting Started
+
+### NPM Installation
+
+```bash
+npm install @worldline/timapi
+```
+
+### Yarn Installation
+
+```bash
+yarn add @worldline/timapi
+```
+
+### Basic Setup
+
+```javascript
+import { Terminal, TerminalSettings, TransactionType } from '@worldline/timapi';
+
+// Create terminal settings
+const settings = new TerminalSettings({
+  terminalId: 'TERMINAL001',
+  guides: ['retail', 'dialog']
+});
+
+// Create terminal instance
+const terminal = new Terminal(settings);
+
+// Add event listener
+terminal.on('transactionCompleted', (response) => {
+  console.log('Transaction completed:', response.result);
+});
+
+// Connect and perform transaction
+async function main() {
+  await terminal.connect();
+  await terminal.login();
+
+  const request = {
+    amount: 1000, // Amount in cents
+    currency: 'EUR',
+    transactionType: TransactionType.PURCHASE
+  };
+
+  const response = await terminal.transaction(request);
+  console.log('Result:', response.result);
+}
+
+main().catch(console.error);
+```
+
+## Configuration
+
+### Network Settings
+
+```javascript
+const settings = new TerminalSettings({
+  // Broadcast mode
+  terminalId: 'TERMINAL001',
+
+  // Or direct connect
+  connectionType: 'direct',
+  hostAddress: '192.168.1.100',
+  hostPort: 7784
+});
+```
+
+### Guide Configuration
+
+```javascript
+const settings = new TerminalSettings({
+  guides: ['retail', 'petrol', 'dialog']
+});
+```
+
+## TypeScript Support
+
+The SDK includes full TypeScript definitions:
+
+```typescript
+import {
+  Terminal,
+  TerminalSettings,
+  TransactionRequest,
+  TransactionResponse,
+  TransactionType,
+  Result
+} from '@worldline/timapi';
+
+const request: TransactionRequest = {
+  amount: 1000,
+  currency: 'EUR',
+  transactionType: TransactionType.PURCHASE
+};
+
+const response: TransactionResponse = await terminal.transaction(request);
+
+if (response.result === Result.SUCCESS) {
+  console.log('Transaction successful');
+}
+```
+
+## Event Handling
+
+```javascript
+// Transaction events
+terminal.on('transactionCompleted', (response) => { /* ... */ });
+terminal.on('transactionError', (error) => { /* ... */ });
+
+// Connection events
+terminal.on('connected', () => { /* ... */ });
+terminal.on('disconnected', () => { /* ... */ });
+
+// Status events
+terminal.on('statusChanged', (status) => { /* ... */ });
+```
+
+## Error Handling
+
+```javascript
+try {
+  const response = await terminal.transaction(request);
+} catch (error) {
+  if (error instanceof TerminalError) {
+    console.error(`Error ${error.code}: ${error.message}`);
+  }
+}
+```
+
+## Browser Support
+
+For browser environments, use the bundled version:
+
+```html
+<script src="node_modules/@worldline/timapi/dist/timapi.browser.js"></script>
+<script>
+  const terminal = new TimApi.Terminal(settings);
+</script>
+```
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="TIMAPI Overview" icon="house" href="/timapi/index">
+    Return to SDK overview
+  </Card>
+  <Card title="Version History" icon="clock-rotate-left" href="/timapi/version-history">
+    SDK version history
+  </Card>
+</CardGroup>

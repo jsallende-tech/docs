@@ -1,0 +1,71 @@
+---
+title: "SDK for Advanced Deployment"
+description: "SmartPOS SDK for advanced app deployment control"
+---
+
+# SDK for Advanced App Deployment
+
+SmartPOS program for app developers offers advanced control on app deployment in specific use cases by integrating a **dedicated SDK**.
+
+## SDK Overview
+
+SmartPOS Store integrates the 3rd-Party App Android SDK, a toolkit that enables Worldline partners to develop Android applications on the SmartPOS platform. The SDK simplifies integration with SmartPOS Store through predefined APIs.
+
+This SDK eliminates integration complexity by handling all communication with the SmartPOS Store securely, allowing you to focus on building the business logic of your application.
+
+<Card title="Official SDK Repository" icon="github" href="https://github.com/PAXSTORE/paxstore-3rd-app-android-sdk">
+  View technical details and updates on GitHub
+</Card>
+
+## When to Use the SDK
+
+Use the SDK for use cases like:
+
+- Your app needs to control when updates occur based on business state (e.g., delay updates during active transactions)
+- Your app requires parameter updates from SmartPOS Store
+- Your app needs to receive cloud messages and notifications from SmartPOS Store
+- You want to integrate analytics and reporting with SmartPOS Store
+
+<Info>
+The SDK is essential when you need your app to manage its lifecycle intelligently based on what the app is currently doing.
+</Info>
+
+## Supported Devices
+
+The SDK **works on all SmartPOS-supported devices.**
+
+**Requirements:** Android SDK 19 or higher
+
+## Getting Your SDK Credentials
+
+<Steps>
+  <Step title="Log in to SmartPOS Developer Center">
+    Access the Developer Center with your partner credentials.
+  </Step>
+  <Step title="Navigate to Your Application">
+    Create or directly navigate to your application's details page.
+  </Step>
+  <Step title="Get Credentials">
+    Get your AppKey and AppSecret from the app details page.
+  </Step>
+  <Step title="Integrate">
+    Follow the setup guide to integrate the SDK.
+  </Step>
+</Steps>
+
+## Quick Start
+
+<Steps>
+  <Step title="Add SDK Dependency">
+    Add the SDK dependency to your `build.gradle`:
+    ```gradle
+    implementation 'com.whatspos.sdk:paxstore-3rd-app-android-sdk:10.0.1'
+    ```
+  </Step>
+  <Step title="Find AppKey and Secret">
+    Navigate to "Finding Your AppKey and Secret" page and follow the instructions.
+  </Step>
+  <Step title="Implementation">
+    Follow the "Update Inquirer Integration" codelab for implementation.
+  </Step>
+</Steps>

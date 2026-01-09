@@ -1,68 +1,214 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Worldline Developer Portal",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#007b7c",
+    "light": "#46beaa",
+    "dark": "#006263"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "SmartPOS",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "smartpos/index",
+              "smartpos/develop-for-smartpos",
+              "smartpos/become-a-partner",
+              "smartpos/whats-new"
             ]
           },
           {
-            "group": "Customization",
+            "group": "App Development",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "smartpos/app-development/index",
+              "smartpos/app-development/app-testing",
+              "smartpos/app-development/web-view",
+              "smartpos/app-development/app-certification",
+              "smartpos/app-development/nordic-market-specificity",
+              "smartpos/app-development/sdk"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "App Deployment",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "smartpos/app-deployment/index",
+              "smartpos/app-deployment/application-release-note",
+              "smartpos/app-deployment/app-signature",
+              "smartpos/app-deployment/upload-apk-in-dev-center",
+              "smartpos/app-deployment/app-approval"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "App Maintenance",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "smartpos/app-maintenance/index",
+              "smartpos/app-maintenance/app-withdrawal"
+            ]
+          },
+          {
+            "group": "WPI (Worldline Payment Interface)",
+            "pages": [
+              "smartpos/wpi/index",
+              "smartpos/wpi/wpi-version-2-0",
+              "smartpos/wpi/wpi-version-2-1",
+              "smartpos/wpi/wpi-codelabs"
+            ]
+          },
+          {
+            "group": "SmartPOS API",
+            "pages": [
+              "smartpos/smartpos-api/index",
+              "smartpos/smartpos-api/smartpos-api-version-1-7"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "smartpos/vas",
+              "smartpos/wl-support",
+              "smartpos/security",
+              "smartpos/faq"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Tap on Mobile",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Getting Started",
             "pages": [
-              "api-reference/introduction"
+              "tap-on-mobile/index",
+              "tap-on-mobile/become-a-partner",
+              "tap-on-mobile/whats-new"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Android Integration",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "tap-on-mobile/android/wpi-2-2",
+              "tap-on-mobile/android/wmi"
+            ]
+          },
+          {
+            "group": "iOS Integration",
+            "pages": [
+              "tap-on-mobile/ios/sdk-overview"
+            ]
+          },
+          {
+            "group": "Development Resources",
+            "pages": [
+              "tap-on-mobile/resources/integration-form",
+              "tap-on-mobile/resources/terminal-registration",
+              "tap-on-mobile/resources/sample-apps",
+              "tap-on-mobile/resources/test-cards",
+              "tap-on-mobile/resources/network-settings"
+            ]
+          },
+          {
+            "group": "Support",
+            "pages": [
+              "tap-on-mobile/wl-support",
+              "tap-on-mobile/faq"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Terminal API",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "terminal/index",
+              "terminal/build-your-integration/index",
+              "terminal/build-your-integration/how-to-setup-your-terminal",
+              "terminal/build-your-integration/sending-your-first-request"
+            ]
+          },
+          {
+            "group": "Integration Guide",
+            "pages": [
+              "terminal/build-your-integration/navigating-the-api-reference",
+              "terminal/build-your-integration/custom-ui-guide",
+              "terminal/build-your-integration/overview-of-async-processing",
+              "terminal/build-your-integration/understanding-our-protocol",
+              "terminal/build-your-integration/migration-plan-to-v5-1-wl1-0-0"
+            ]
+          },
+          {
+            "group": "Solutions",
+            "pages": [
+              "terminal/solutions/index",
+              "terminal/solutions/nexo-retailer-v5",
+              "terminal/solutions/cloud-integration"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "terminal/release-notes",
+              "terminal/faq"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Terminal API Reference",
+        "groups": [
+          {
+            "group": "API Reference",
+            "pages": [
+              "terminal/api-reference/index"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "TIMAPI SDKs",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "timapi/index",
+              "timapi/version-history"
+            ]
+          },
+          {
+            "group": "C SDK",
+            "pages": [
+              "timapi/c/guide",
+              "timapi/c/appendix"
+            ]
+          },
+          {
+            "group": "Java SDK",
+            "pages": [
+              "timapi/java/guide"
+            ]
+          },
+          {
+            "group": ".NET SDK",
+            "pages": [
+              "timapi/dotnet/guide"
+            ]
+          },
+          {
+            "group": "Swift SDK",
+            "pages": [
+              "timapi/swift/guide"
+            ]
+          },
+          {
+            "group": "JavaScript SDK",
+            "pages": [
+              "timapi/js/guide"
             ]
           }
         ]
@@ -71,14 +217,14 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Worldline",
+          "href": "https://worldline.com",
+          "icon": "globe"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Support",
+          "href": "https://worldline.com/en/home/support",
+          "icon": "headset"
         }
       ]
     }
@@ -91,32 +237,32 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "https://worldline.com/en/home/support"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Contact Us",
+      "href": "https://worldline.com/en/home/contact"
     }
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/worldaborive",
+      "github": "https://github.com/worldline",
+      "linkedin": "https://linkedin.com/company/worldline"
     }
   }
 }

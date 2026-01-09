@@ -1,0 +1,137 @@
+---
+title: ".NET SDK Guide"
+description: "TIM API .NET SDK implementation guide"
+---
+
+# TIM API .NET SDK Guide
+
+## Introduction
+
+The TIM API .NET SDK provides a .NET implementation for ECR integration with Worldline terminals. This SDK supports .NET Framework 4.5+ and .NET Core 2.0+.
+
+## Getting Started
+
+### NuGet Package
+
+Install the TIM API .NET SDK via NuGet:
+
+```bash
+dotnet add package Worldline.TimApi
+```
+
+Or via Package Manager:
+
+```powershell
+Install-Package Worldline.TimApi
+```
+
+### Basic Setup
+
+```csharp
+using Worldline.TimApi;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Create terminal settings
+        var settings = new TerminalSettings
+        {
+            TerminalId = "TERMINAL001",
+            Guides = Guide.Retail | Guide.Dialog
+        };
+
+        // Create terminal instance
+        using var terminal = new Terminal(settings);
+
+        // Add event handler
+        terminal.TransactionCompleted += (sender, e) =>
+        {
+            Console.WriteLine($"Transaction completed: {e.Response.Result}");
+        };
+
+        // Connect and perform transaction
+        terminal.Connect();
+        terminal.Login();
+
+        var request = new TransactionRequest
+        {
+            Amount = 1000, // Amount in cents
+            Currency = "EUR",
+            TransactionType = TransactionType.Purchase
+        };
+
+        var response = terminal.Transaction(request);
+    }
+}
+```
+
+## Configuration
+
+### Network Settings
+
+```csharp
+var settings = new TerminalSettings();
+
+// Broadcast mode
+settings.TerminalId = "TERMINAL001";
+
+// Or direct connect
+settings.ConnectionType = ConnectionType.Direct;
+settings.HostAddress = "192.168.1.100";
+settings.HostPort = 7784;
+```
+
+### Guide Configuration
+
+```csharp
+// Enable multiple guides using flags
+settings.Guides = Guide.Retail | Guide.Petrol | Guide.Dialog;
+```
+
+## Async/Await Pattern
+
+```csharp
+public async Task ProcessTransactionAsync()
+{
+    var request = new TransactionRequest
+    {
+        Amount = 1000,
+        Currency = "EUR"
+    };
+
+    try
+    {
+        var response = await terminal.TransactionAsync(request);
+
+        if (response.Result == Result.Success)
+        {
+            Console.WriteLine("Transaction successful");
+        }
+    }
+    catch (TerminalException ex)
+    {
+        Console.WriteLine($"Error: {ex.ErrorCode} - {ex.Message}");
+    }
+}
+```
+
+## IDisposable Pattern
+
+The terminal implements `IDisposable`. Use the `using` statement or explicitly dispose:
+
+```csharp
+using var terminal = new Terminal(settings);
+// Terminal automatically disposed when out of scope
+```
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="TIMAPI Overview" icon="house" href="/timapi/index">
+    Return to SDK overview
+  </Card>
+  <Card title="Version History" icon="clock-rotate-left" href="/timapi/version-history">
+    SDK version history
+  </Card>
+</CardGroup>

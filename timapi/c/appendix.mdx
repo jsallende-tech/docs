@@ -1,0 +1,80 @@
+---
+title: "C SDK Appendix"
+description: "TIM API C SDK appendix and reference material"
+---
+
+# C SDK Appendix
+
+Additional reference material for the TIM API C SDK.
+
+## Error Codes
+
+| Code | Name | Description |
+|------|------|-------------|
+| 0 | SUCCESS | Operation completed successfully |
+| 1 | INVALID_PARAMETER | Invalid parameter provided |
+| 2 | CONNECTION_ERROR | Network connection failed |
+| 3 | TIMEOUT | Operation timed out |
+| 4 | TRANSACTION_ERROR | Transaction processing error |
+
+## Object Types
+
+### Terminal Settings
+
+```c
+// Create settings
+ta_object_t settings = ta_object_invalid;
+ta_terminal_settings_create(&settings);
+
+// Configure
+ta_terminal_settings_set_terminal_id(settings, "TERMINAL001");
+ta_terminal_settings_set_guides(settings, ta_c_guide_retail);
+
+// Release when done
+ta_object_release(settings);
+```
+
+### Transaction Request
+
+```c
+// Create request
+ta_object_t request = ta_object_invalid;
+ta_transaction_request_create(&request);
+
+// Set amount
+ta_transaction_request_set_amount(request, 1000); // Amount in cents
+
+// Set currency
+ta_transaction_request_set_currency(request, "EUR");
+
+// Release when done
+ta_object_release(request);
+```
+
+## Guide Constants
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `ta_c_guide_retail` | 0x01 | Basic retail functionality |
+| `ta_c_guide_petrol` | 0x02 | Petrol station features |
+| `ta_c_guide_unattended` | 0x04 | Unattended terminal features |
+| `ta_c_guide_banking` | 0x08 | Banking operations |
+| `ta_c_guide_dialog` | 0x10 | Dialog UI features |
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Memory Management">
+    Always pair create functions with release calls. Use local variables for temporary objects.
+  </Accordion>
+  <Accordion title="Error Handling">
+    Check return codes from all API calls. Implement appropriate error recovery.
+  </Accordion>
+  <Accordion title="Thread Safety">
+    TIM API objects are not thread-safe. Synchronize access when using from multiple threads.
+  </Accordion>
+</AccordionGroup>
+
+<Card title="C SDK Guide" icon="book" href="/timapi/c/guide">
+  Return to main C SDK documentation
+</Card>

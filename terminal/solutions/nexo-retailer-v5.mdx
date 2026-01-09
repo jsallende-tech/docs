@@ -1,0 +1,73 @@
+---
+title: "Nexo Retailer V5"
+description: "Understanding the Nexo standard that powers Terminal API"
+---
+
+# Nexo Retailer V5
+
+## Why We Selected Nexo
+
+At Worldline, we are committed to advancing **open, future-proof payment ecosystems.** As an active member of the [Nexo Standards association](https://www.nexo-standards.org/about-us), we chose to adopt Nexo Retailer V5 as the foundation for our Terminal API.
+
+### Key Reasons
+
+<CardGroup cols={3}>
+  <Card title="Global Interoperability" icon="globe">
+    Designed for international scalability and consistency across markets and acquirers
+  </Card>
+  <Card title="Future-Proof" icon="forward">
+    Aligning with a movement supported by Europe's leading payment providers
+  </Card>
+  <Card title="Innovation Focus" icon="lightbulb">
+    Building on a proven foundation lets us focus on enhancing capabilities
+  </Card>
+</CardGroup>
+
+## What is Nexo Retailer V5?
+
+Nexo Retailer V5 is an open communication protocol that enables seamless, real-time interaction between a merchant's Point-of-Sale (POS) system and a payment terminal. It is part of the suite of standards defined by **Nexo Standards**, a not-for-profit association aiming to bring **global interoperability** to the payments ecosystem.
+
+Nexo Retailer is specifically focused on the **Retailer-to-Acquirer interface** — standardizing how POS systems send requests (like payments, refunds, or reconciliations) and receive responses from payment terminals.
+
+### Supported Use Cases
+
+- Traditional POS terminals
+- Self-service kiosks
+- Headless checkout systems
+- Cloud-based integrations
+
+## Understanding the Protocol
+
+Terminal API uses Nexo Retailer V5 as its messaging backbone. This protocol defines the structure and behavior of messages such as:
+
+| Message Type | Purpose |
+|--------------|---------|
+| `PaymentRequest` | Process card payments |
+| `ReversalRequest` | Reverse a previous transaction |
+| `ReconciliationRequest` | Reconcile transactions |
+
+All messages follow a predictable structure based on Nexo's data model, which draws on ISO 20022 principles — enabling structured, consistent parsing and validation across systems.
+
+<Note>
+While Nexo itself defines XML message structures, the Terminal API transmits those messages wrapped in JSON over REST endpoints.
+</Note>
+
+## Compatibility
+
+The Terminal API implementation adheres to the official Nexo Retailer V5 specification, making it easy for developers with Nexo experience to integrate without needing to relearn core concepts or message structures.
+
+<AccordionGroup>
+  <Accordion title="Consistent Message Formats">
+    Message formats, flows, and terminology remain consistent with the standard.
+  </Accordion>
+  <Accordion title="Structured Extensions">
+    Where additional functionality is required, protocol extensions are applied in a structured and non-breaking way.
+  </Accordion>
+  <Accordion title="Full Documentation">
+    All extensions and enhancements are fully documented.
+  </Accordion>
+</AccordionGroup>
+
+<Card title="Build Your Integration" icon="hammer" href="/terminal/build-your-integration/index">
+  Detailed implementation guidance including sample messages and request/response flows
+</Card>
