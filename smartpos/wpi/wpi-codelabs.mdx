@@ -5,107 +5,101 @@ description: "Hands-on tutorials for implementing WPI in your SmartPOS applicati
 
 # WPI Codelabs
 
-Practical, hands-on tutorials to help you implement the Worldline Payment Interface in your SmartPOS applications.
+Practical, hands-on tutorials to help you implement the Worldline Payment Interface in your SmartPOS applications. Each codelab provides step-by-step guidelines on how to develop new features using WPI.
+
+## Available Codelabs
+
+<CardGroup cols={1}>
+  <Card title="Create First Application with WPI" icon="rocket" href="/smartpos/wpi/codelabs/first-payment-app">
+    **Duration:** ~31 minutes
+
+    Learn the fundamentals of WPI integration by building your first payment application. This codelab covers:
+    - Setting up the Android project
+    - Understanding WPI request/response structure
+    - Implementing a basic sale transaction
+    - Handling payment responses
+  </Card>
+
+  <Card title="Retrieve Payment Information" icon="circle-info" href="/smartpos/wpi/codelabs/retrieve-payment-info">
+    **Duration:** ~31 minutes
+
+    Learn how to query the payment solution for configuration and capabilities using the WPI background service. This codelab covers:
+    - Using Android Messenger Service for background operations
+    - Binding to the WPI information service
+    - Retrieving terminal configuration
+    - Parsing payment solution capabilities
+  </Card>
+
+  <Card title="Retry Logic for WPI Payment Information" icon="rotate" href="/smartpos/wpi/codelabs/retry-logic">
+    **Duration:** ~39 minutes
+
+    Implement robust retry mechanisms for your WPI integration. This codelab covers:
+    - Exponential backoff retry strategies
+    - ViewModel-based UI state management
+    - Service disconnection handling
+    - User feedback during retries
+  </Card>
+</CardGroup>
 
 ## Getting Started
 
 <Steps>
   <Step title="Set Up Your Development Environment">
     Ensure you have Android Studio installed and configured for SmartPOS development.
+    - Android Studio Narwhal Feature Drop or later
+    - SDK 36 or higher
+    - Gradle 8.14.3 or higher
   </Step>
   <Step title="Get Your Test Terminal">
     Request a test terminal from your Worldline Partner Manager.
   </Step>
-  <Step title="Access the Sandbox">
-    Set up access to the SmartPOS sandbox environment for testing.
+  <Step title="Verify Payment Application">
+    Ensure you have a payment application running on your device before starting the codelabs.
   </Step>
 </Steps>
 
-## Basic Payment Integration
+## Prerequisites
 
-### Purchase Transaction
+Before starting any codelab, ensure you have:
 
-```java
-// Example: Basic purchase transaction
-public void initiatePurchase(double amount, String currency) {
-    Intent paymentIntent = new Intent("com.worldline.payment.action.PROCESS_TRANSACTION");
+- **Android Studio** - Latest version recommended
+- **SmartPOS Device or Emulator** - For testing your applications
+- **Payment Application** - Running on your test device
+- **Basic Kotlin Knowledge** - Familiarity with Android development
 
-    Bundle extras = new Bundle();
-    extras.putString("WPI_SERVICE_TYPE", "PURCHASE");
-    extras.putLong("WPI_AMOUNT", (long)(amount * 100)); // Convert to cents
-    extras.putString("WPI_CURRENCY", currency);
-    extras.putString("WPI_SESSION_ID", generateSessionId());
-    extras.putString("WPI_VERSION", "2.0");
+## Code Samples
 
-    paymentIntent.putExtras(extras);
-    startActivityForResult(paymentIntent, REQUEST_PAYMENT);
-}
+Each codelab provides downloadable starter code and finished solutions:
 
-// Handle the response
-@Override
-protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    if (requestCode == REQUEST_PAYMENT) {
-        if (resultCode == RESULT_OK) {
-            Bundle response = data.getExtras();
-            int wpiResult = response.getInt("WPI_RESULT_CODE");
-
-            if (wpiResult == 0) {
-                // Payment successful
-                String authCode = response.getString("WPI_AUTHORIZATION_CODE");
-                String receipt = response.getString("WPI_RECEIPT");
-                handleSuccessfulPayment(authCode, receipt);
-            } else {
-                // Payment failed
-                handlePaymentError(wpiResult);
-            }
-        }
-    }
-}
-```
-
-### Refund Transaction
-
-```java
-public void initiateRefund(double amount, String currency, String originalTransactionId) {
-    Intent refundIntent = new Intent("com.worldline.payment.action.PROCESS_TRANSACTION");
-
-    Bundle extras = new Bundle();
-    extras.putString("WPI_SERVICE_TYPE", "REFUND");
-    extras.putLong("WPI_AMOUNT", (long)(amount * 100));
-    extras.putString("WPI_CURRENCY", currency);
-    extras.putString("WPI_SESSION_ID", generateSessionId());
-    extras.putString("WPI_ORIGINAL_TRANSACTION_ID", originalTransactionId);
-    extras.putString("WPI_VERSION", "2.0");
-
-    refundIntent.putExtras(extras);
-    startActivityForResult(refundIntent, REQUEST_REFUND);
-}
-```
-
-## Advanced Topics
-
-<CardGroup cols={2}>
-  <Card title="Pre-authorization Flow" icon="lock">
-    Learn how to implement pre-authorization for reservations and hold amounts.
+<CardGroup cols={1}>
+  <Card title="First Payment App Sample Code" icon="download" href="/assets/smartpos/wpi-codelabs/wpi-financial.zip">
+    Download the WPI Financial codelab starter and finished code (ZIP)
   </Card>
-  <Card title="Receipt Customization" icon="receipt">
-    Customize receipt format and delivery options.
+  <Card title="Payment Information Sample Code" icon="download" href="/assets/smartpos/wpi-codelabs/wpi-payment-information.zip">
+    Download the WPI Payment Information codelab starter and finished code (ZIP)
   </Card>
-  <Card title="Error Handling" icon="bug">
-    Best practices for handling WPI errors gracefully.
-  </Card>
-  <Card title="Background Operations" icon="gears">
-    Implement background information queries using Messenger service.
+  <Card title="Retry Logic Sample Code" icon="download" href="/assets/smartpos/wpi-codelabs/wpi-retry-payment-information.zip">
+    Download the WPI Retry Logic codelab starter and finished code (ZIP)
   </Card>
 </CardGroup>
 
-## Resources
+## Related Documentation
 
 <CardGroup cols={2}>
   <Card title="WPI 2.0 Specification" icon="book" href="/smartpos/wpi/wpi-version-2-0">
-    Complete API reference
+    Complete WPI 2.0 API reference
+  </Card>
+  <Card title="WPI 2.1 Specification" icon="book" href="/smartpos/wpi/wpi-version-2-1">
+    Latest WPI 2.1 features and updates
   </Card>
   <Card title="SDK Documentation" icon="code" href="/smartpos/app-development/sdk">
     SmartPOS SDK for advanced features
   </Card>
+  <Card title="App Testing" icon="flask" href="/smartpos/app-development/app-testing">
+    Test your WPI integration
+  </Card>
 </CardGroup>
+
+<Note>
+We aim to add more content to this section frequently. If you are interested in developing your knowledge about WPI and its new features, please visit us again soon!
+</Note>

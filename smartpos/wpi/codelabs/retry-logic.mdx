@@ -1,0 +1,406 @@
+---
+title: "Retry Logic for WPI Payment Information"
+description: "Implement robust retry mechanisms for WPI information requests"
+---
+
+# WPI V2.X: Retry Logic for WPI Payment Information
+
+<Info>
+**Estimated time:** 39 minutes
+</Info>
+
+## Overview
+
+This codelab builds on the [Retrieve Payment Information](/smartpos/wpi/codelabs/retrieve-payment-info) codelab and teaches you how to implement robust retry mechanisms for WPI information requests.
+
+### What You'll Learn
+
+- **Retry Logic:** Retry requests up to 5 times with increasing delay if they fail
+- **Service Disconnection Handling:** Exit retry loop and show error if service disconnects
+- **UI Feedback:** Display current attempt and error messages transparently
+
+## Prerequisites
+
+- Basic knowledge of Android development and Kotlin
+- Payment application running on your device
+- SmartPOS Settings application installed
+
+## Getting Set Up
+
+### Get the Code
+
+<Card title="Download Sample Code" icon="download" href="/assets/smartpos/wpi-codelabs/wpi-retry-payment-information.zip">
+  WPI Retry Logic Codelab Sample Code (ZIP)
+</Card>
+
+### Branches
+
+- **end**: Starting point (finished code from previous codelab)
+- **retry-wpi-info**: Final solution with retry mechanism
+
+## Setup Default Application
+
+To simulate a real-world scenario, set the sample app as the default application:
+
+<Steps>
+  <Step title="Open Settings">
+    Go to Launcher and open the Settings application
+  </Step>
+  <Step title="Select Default App">
+    Select wpi-codelab as Default Application
+  </Step>
+  <Step title="Verify">
+    Restart the terminal - the sample app should start automatically
+  </Step>
+</Steps>
+
+## Payment Information Screen with UI States
+
+### Define UI States
+
+Create a sealed class to represent different UI states:
+
+```kotlin
+sealed class PaymentInfoUiState {
+    object Idle : PaymentInfoUiState()
+    data class Loading(val attempt: Int) : PaymentInfoUiState()
+    data class Success(val json: String, val attempt: Int) : PaymentInfoUiState()
+    data class Error(val message: String, val attempt: Int) : PaymentInfoUiState()
+}
+```
+
+### Update Composable Signature
+
+```kotlin
+@Composable
+fun PaymentInfoScreen(
+    uiState: PaymentInfoUiState,
+    onRetry: () -> Unit
+) {
+    // UI implementation
+}
+```
+
+### Handle Different States
+
+```kotlin
+Column(
+    modifier = Modifier
+        .fillMaxSize()
+        .padding(24.dp),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+) {
+    when (uiState) {
+        is PaymentInfoUiState.Loading -> {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Loading... (Attempt ${uiState.attempt})")
+        }
+        is PaymentInfoUiState.Error -> {
+            Text(
+                text = "Error: ${uiState.message}",
+                color = Color.Red
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onRetry) {
+                Text("Retry")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Attempt: ${uiState.attempt}")
+        }
+        is PaymentInfoUiState.Success -> {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = prettyPrintJson(uiState.json),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+        }
+        PaymentInfoUiState.Idle -> {}
+    }
+}
+```
+
+## Implement ViewModel for UI State Management
+
+```kotlin
+class PaymentInfoViewModel : ViewModel() {
+    private val _uiState = MutableStateFlow<PaymentInfoUiState>(PaymentInfoUiState.Idle)
+    val uiState: StateFlow<PaymentInfoUiState> = _uiState
+    private var attempt = 1
+
+    fun startPaymentInfoRequest() {
+        attempt = 1
+        _uiState.value = PaymentInfoUiState.Loading(attempt)
+    }
+
+    fun onPaymentInfoResult(result: Result<String>) {
+        if (result.isSuccess) {
+            _uiState.value = PaymentInfoUiState.Success(result.getOrNull() ?: "", attempt)
+        } else {
+            if (attempt >= 5) {
+                _uiState.value = PaymentInfoUiState.Error("All attempts failed", attempt)
+                attempt = 0
+            } else {
+                _uiState.value = PaymentInfoUiState.Loading(attempt)
+            }
+        }
+        attempt++
+    }
+
+    fun retry() {
+        _uiState.value = PaymentInfoUiState.Loading(attempt)
+    }
+
+    fun onServiceDisconnected() {
+        _uiState.value = PaymentInfoUiState.Error("Service disconnected", attempt)
+        attempt = 0
+    }
+}
+```
+
+## Implement Retry Logic
+
+### Create Response Data Class
+
+```kotlin
+@Serializable
+data class PaymentInformationResponse(
+    val errorCondition: String,
+    val result: Result
+)
+
+@Serializable(with = ResultSerializer::class)
+enum class Result(val id: String) {
+    SUCCESS("WPI_RESULT_SUCCESS"),
+    PARTIAL("WPI_RESULT_PARTIAL"),
+    FAILURE("WPI_RESULT_FAILURE")
+}
+
+@Serializer(forClass = Result::class)
+class ResultSerializer : KSerializer<Result> {
+    private val prefix = "WPI_RESULT_"
+
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("Result", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): Result {
+        val name = decoder.decodeString().removePrefix(prefix)
+        return Result.valueOf(name)
+    }
+
+    override fun serialize(encoder: Encoder, value: Result) {
+        encoder.encodeString(value.id)
+    }
+}
+```
+
+### Execute Payment Information with Result
+
+```kotlin
+private val json = Json {
+    encodeDefaults = true
+    ignoreUnknownKeys = true
+    explicitNulls = false
+}
+
+private suspend fun executePaymentInformation(): Result<String> = suspendCancellableCoroutine { cont ->
+    val message = Message.obtain(null, 895349, paymentInformationBundle)
+
+    val handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                895349 -> {
+                    val data = msg.obj as? Bundle
+                    val response = data?.getString("WPI_RESPONSE")
+                    if (response != null && response.isNotBlank()) {
+                        val decodeResult = runCatching {
+                            json.decodeFromString<PaymentInformationResponse>(response)
+                        }
+                        decodeResult.onSuccess { paymentSettingsResponse ->
+                            if (paymentSettingsResponse.result == WPIResult.SUCCESS) {
+                                cont.resume(Result.success(response))
+                            } else {
+                                cont.resume(Result.failure(
+                                    Exception("Result not SUCCESS: ${paymentSettingsResponse.result}")
+                                ))
+                            }
+                        }.onFailure { e ->
+                            cont.resume(Result.failure(Exception("Failed to parse response", e)))
+                        }
+                    } else {
+                        cont.resume(Result.failure(Exception("Invalid or empty response")))
+                    }
+                }
+                else -> cont.resumeWithException(
+                    IllegalArgumentException("${msg.what} is an incorrect message identifier.")
+                )
+            }
+        }
+    }
+
+    val messenger = Messenger(handler)
+    message.replyTo = messenger
+
+    if (!bound || mService == null) {
+        cont.resume(Result.failure(Exception("Service not bound")))
+        return@suspendCancellableCoroutine
+    }
+
+    runCatching {
+        mService?.send(message)
+    }.onFailure { e ->
+        cont.resume(Result.failure(e))
+    }
+}
+```
+
+### Retry Call Implementation
+
+```kotlin
+private suspend fun <T> retryCall(
+    times: Int = 5,
+    initialDelay: Long = 2000L,
+    factor: Long = 2L,
+    block: suspend () -> Result<T>
+) {
+    var currentDelay = initialDelay
+    repeat(times) {
+        if (!bound) {
+            Log.e("PaymentInfo", "Service is not bound. Exiting retry loop.")
+            paymentInfoViewModel.onServiceDisconnected()
+            return
+        }
+        Log.i("PaymentInfo", "Retry attempt: $it")
+        block().onSuccess { return }
+        Log.i("PaymentInfo", "Current delay: $currentDelay")
+        delay(currentDelay)
+        currentDelay *= factor
+    }
+}
+```
+
+### Execute with Retry
+
+```kotlin
+private fun executePaymentInformationWithRetry() {
+    retryAttempt = 1
+    lifecycleScope.launch {
+        retryCall {
+            val res = executePaymentInformation()
+            paymentInfoViewModel.onPaymentInfoResult(res)
+            retryAttempt++
+            res
+        }
+    }
+}
+```
+
+## Complete MainActivity
+
+```kotlin
+class MainActivity : ComponentActivity() {
+    private var mService: Messenger? = null
+    private var bound: Boolean = false
+    private var retryAttempt = 1
+    private val paymentInfoViewModel: PaymentInfoViewModel by viewModels()
+
+    private val mConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            mService = Messenger(service)
+            bound = true
+            paymentInfoViewModel.startPaymentInfoRequest()
+            executePaymentInformationWithRetry()
+        }
+
+        override fun onServiceDisconnected(className: ComponentName) {
+            bound = false
+            paymentInfoViewModel.onServiceDisconnected()
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val uiState by paymentInfoViewModel.uiState.collectAsState()
+            PaymentInfoScreen(
+                uiState = uiState,
+                onRetry = {
+                    paymentInfoViewModel.retry()
+                    bindInformationService()
+                }
+            )
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        bindInformationService()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (bound) {
+            unbindService(mConnection)
+            bound = false
+        }
+    }
+
+    private fun bindInformationService() {
+        val intent = Intent("com.worldline.payment.action.PROCESS_INFORMATION").apply {
+            component = getWpiSupportedServices(
+                "com.worldline.payment.action.PROCESS_INFORMATION"
+            ).first()
+            putExtras(paymentInformationBundle)
+        }
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE)
+    }
+}
+```
+
+## Testing the Application
+
+<Steps>
+  <Step title="Deploy the App">
+    Install the app on your SmartPOS device
+  </Step>
+  <Step title="Test Success Case">
+    With payment solution running, verify information is retrieved
+  </Step>
+  <Step title="Test Retry Logic">
+    Stop the payment solution briefly to see retry attempts
+  </Step>
+  <Step title="Test Error Handling">
+    Verify error message displays after all attempts fail
+  </Step>
+</Steps>
+
+## Congratulations!
+
+You've successfully implemented robust retry logic for WPI payment information requests!
+
+<Check>
+**What you learned:**
+- Implementing exponential backoff retry logic
+- Managing UI state with ViewModel
+- Handling service disconnections gracefully
+- Providing user feedback during retries
+</Check>
+
+### Next Steps
+
+<CardGroup cols={2}>
+  <Card title="WPI 2.1 Specification" icon="book" href="/smartpos/wpi/wpi-version-2-1">
+    Complete API reference
+  </Card>
+  <Card title="SmartPOS API" icon="code" href="/smartpos/smartpos-api/index">
+    Explore SmartPOS API features
+  </Card>
+</CardGroup>

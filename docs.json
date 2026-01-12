@@ -56,7 +56,15 @@
               "smartpos/wpi/index",
               "smartpos/wpi/wpi-version-2-0",
               "smartpos/wpi/wpi-version-2-1",
-              "smartpos/wpi/wpi-codelabs"
+              {
+                "group": "WPI Codelabs",
+                "pages": [
+                  "smartpos/wpi/wpi-codelabs",
+                  "smartpos/wpi/codelabs/first-payment-app",
+                  "smartpos/wpi/codelabs/retrieve-payment-info",
+                  "smartpos/wpi/codelabs/retry-logic"
+                ]
+              }
             ]
           },
           {
@@ -67,9 +75,15 @@
             ]
           },
           {
-            "group": "Resources",
+            "group": "Value Added Services",
             "pages": [
               "smartpos/vas",
+              "smartpos/vas/codelabs/barcode-scanner"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
               "smartpos/wl-support",
               "smartpos/security",
               "smartpos/faq"

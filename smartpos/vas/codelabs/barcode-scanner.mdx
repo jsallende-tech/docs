@@ -1,0 +1,231 @@
+---
+title: "Barcode Scanner App"
+description: "Learn how to use the Barcode Scanner Value Added Service on SmartPOS devices"
+---
+
+# Barcode Scanner App Codelab
+
+<Info>
+**Estimated time:** 14 minutes
+</Info>
+
+## Introduction
+
+Welcome to the Barcode Scanner App codelab! In this tutorial, you will learn how to:
+
+- Install the app via terminal
+- Verify the service is running
+- Simulate external connections using Postman
+- Send commands and check responses
+- Explore three use cases: successful scan, aborted scan, and unsupported device
+
+## Prerequisites
+
+<Warning>
+The following requirements must be met before starting this codelab:
+</Warning>
+
+- **Castles S1U2 device** is required for this codelab
+- Device must be connected to a network (via WiFi)
+- Barcode Scanner app (only available from the SmartPOS Store)
+- [Postman](https://www.postman.com/downloads/) installed on your computer
+
+## Step 1: Install the Application
+
+<Steps>
+  <Step title="Open SmartPOS Store">
+    Open the SmartPOS Store client app on your device (usually found in the terminal menu)
+  </Step>
+  <Step title="Search for App">
+    Search for "Barcode Scanner" in the SmartPOS Store
+  </Step>
+  <Step title="Install">
+    Install the application directly from the SmartPOS Store
+  </Step>
+  <Step title="Confirm">
+    Confirm installation on your device
+  </Step>
+</Steps>
+
+<Note>
+The Barcode Scanner app is only available as an official release through the SmartPOS Store.
+</Note>
+
+## Step 2: Verify Service Startup
+
+<Steps>
+  <Step title="Check Status Bar">
+    After installation, check the status bar for the Barcode Scanner app service icon
+  </Step>
+  <Step title="Open from Launcher">
+    If the icon is not visible, open the app from the launcher menu
+  </Step>
+  <Step title="View Connection Info">
+    The main activity will display the service status and WebSocket connection info
+  </Step>
+  <Step title="Verify Camera Icon">
+    Verify that the service icon (camera icon) is present in the status bar
+  </Step>
+  <Step title="Check Notifications">
+    If an external connection has been established, the notification center will display the connection status
+  </Step>
+</Steps>
+
+<Warning>
+The WebSocket server must be running for external connections to work.
+</Warning>
+
+## Step 3: Simulate External Connection Using Postman
+
+<Steps>
+  <Step title="Open Postman">
+    Open Postman on your computer
+  </Step>
+  <Step title="Create Collection">
+    Create a new collection
+  </Step>
+  <Step title="Create WebSocket Request">
+    Create a new WebSocket request
+  </Step>
+  <Step title="Enter URL">
+    Enter the WebSocket URL with the device IP and port (found in the app's main activity screen)
+  </Step>
+  <Step title="Connect">
+    Click **Connect** to establish the WebSocket connection
+  </Step>
+  <Step title="Verify Connection">
+    You should see a successful connection message
+  </Step>
+</Steps>
+
+<Note>
+Ensure your computer and device are on the same network.
+</Note>
+
+## Step 4: Use Case 1 - Successful readScannerData
+
+<Steps>
+  <Step title="Send Command">
+    In Postman, send the following command as a simple string (not JSON):
+    ```
+    readScannerData
+    ```
+  </Step>
+  <Step title="Confirm Sent">
+    Confirm the command has been sent successfully in Postman
+  </Step>
+  <Step title="Present Barcode">
+    The app will initiate a scan. Present a barcode or QR code at the bottom of the device so the reader can scan it
+  </Step>
+  <Step title="Receive Response">
+    You should receive a response in Postman with the scanned data
+  </Step>
+</Steps>
+
+### Success Response
+
+```json
+{
+  "status": "success",
+  "data": "<scanned-barcode-data>"
+}
+```
+
+## Step 5: Use Case 2 - Aborted Scan
+
+This use case demonstrates how to abort a scan operation using `cancelRead`.
+
+<Steps>
+  <Step title="Send Read Command">
+    Send the `readScannerData` command:
+    ```
+    readScannerData
+    ```
+  </Step>
+  <Step title="Send Cancel Command">
+    Before scanning a barcode, send the `cancelRead` command:
+    ```
+    cancelRead
+    ```
+  </Step>
+  <Step title="Check Cancel Response">
+    You should receive the cancel confirmation:
+    ```json
+    {
+      "status": "success",
+      "data": "Read operation canceled"
+    }
+    ```
+  </Step>
+  <Step title="Check Read Response">
+    You should also receive a response to the initial read command:
+    ```json
+    {
+      "status": "error",
+      "data": "No data read from scanner"
+    }
+    ```
+  </Step>
+</Steps>
+
+<Note>
+This demonstrates how to abort a scan operation from an external client.
+</Note>
+
+## Step 6: Use Case 3 - Unsupported Device
+
+This use case demonstrates what happens when you attempt to use the scanner on a device that does not support barcode scanning hardware.
+
+<Steps>
+  <Step title="Send Command on Unsupported Device">
+    Send the `readScannerData` command on a device without scanner hardware
+  </Step>
+  <Step title="Receive Fatal Response">
+    You will receive a response indicating a fatal error:
+    ```json
+    {
+      "status": "fatal",
+      "data": "Scanner not supported"
+    }
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+This response is only returned on devices that do not support the scanner hardware. On supported devices, you will receive either a success or a recoverable error.
+</Warning>
+
+## Command Reference
+
+| Command | Description | Response |
+|---------|-------------|----------|
+| `readScannerData` | Initiates a barcode scan | Success with data or error |
+| `cancelRead` | Cancels an ongoing scan | Success confirmation |
+
+## Response Status Types
+
+| Status | Description |
+|--------|-------------|
+| `success` | Operation completed successfully |
+| `error` | Recoverable error occurred |
+| `fatal` | Unrecoverable error (e.g., unsupported hardware) |
+
+## Summary
+
+<Check>
+**You have learned how to:**
+- Install and verify the Barcode Scanner app
+- Connect and interact with the app using Postman
+- Send commands and handle responses for successful, aborted, and unsupported scan operations
+</Check>
+
+### Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Value Added Services" icon="star" href="/smartpos/vas">
+    Explore more VAS options
+  </Card>
+  <Card title="SmartPOS API" icon="code" href="/smartpos/smartpos-api/index">
+    Learn about SmartPOS API features
+  </Card>
+</CardGroup>

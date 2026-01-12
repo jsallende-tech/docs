@@ -1,79 +1,548 @@
 ---
 title: "SmartPOS API 1.7"
-description: "SmartPOS API version 1.7 specification"
+description: "Complete SmartPOS API version 1.7 specification with all interfaces, methods, and code examples"
 ---
 
 # SmartPOS API Version 1.7
 
-The SmartPOS API 1.7 provides comprehensive access to terminal information and services.
+**Revision #1**
 
-## Overview
+<Card title="Download Release Package" icon="download" href="/assets/SmartPOS-API-1.7.1.zip">
+  SmartPOS API 1.7.1.ZIP
+</Card>
 
-This version of the SmartPOS API includes:
+## Table of Contents
 
-- Terminal identification methods
-- Merchant information retrieval
-- Device capability queries
-- System service integration
+1. [Overview](#1-overview)
+2. [Getting Started](#2-getting-started)
+3. [Interface Structure](#3-interface-structure)
+   - [SmartPOS Info](#31-smartpos-info)
+   - [Security](#32-security)
+   - [Printer](#33-printer)
+   - [NFC & ChipCard Reader](#34-nfc--chipcard-reader)
+   - [Feature Check](#35-feature-check)
+   - [Permissions](#36-permissions)
+   - [Service Connection](#37-service-connection)
+4. [Glossary](#4-glossary)
 
-## Service Connection
+---
 
-```java
-// Bind to SmartPOS API service
-private ServiceConnection serviceConnection = new ServiceConnection() {
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        smartPosApi = ISmartPosApi.Stub.asInterface(service);
-        // Service is ready to use
+## 1. Overview
+
+Welcome to the developer documentation for the SmartPOS API, a powerful library that enables seamless integration with a wide range of smart point-of-sale (SmartPOS) devices. The SmartPOS API provides a unified interface to access various features and services provided by all Worldline offered SmartPOS devices.
+
+The SmartPOS API is designed to facilitate communication and interaction with SmartPOS devices, allowing developers to leverage their capabilities for tasks such as compliant secure connections or access to the hardware features. By utilizing the library, you can access a range of functionalities tailored to meet the specific requirements of your application.
+
+### 1.1 What's New
+
+- **SmartPOS Info** - New methods added:
+  - `setStatusBar(expandable: Boolean)`
+  - `setNavigationBar(visible: Boolean)`
+
+### 1.2 Revision History
+
+| Revision | Changes |
+|----------|---------|
+| #1 | Document Creation |
+
+---
+
+## 2. Getting Started
+
+This guide will walk you through the steps to integrate the SmartPOS API into your Android Studio project.
+
+### Prerequisites
+
+Before you begin, ensure that you have the following prerequisites in place:
+
+1. **Android Studio**: Make sure you have the latest version of Android Studio installed on your development machine
+2. **SmartPOS API Library**: Obtain the SmartPOS API library from the official source
+3. **SmartPOS Device**: Ensure that you have a compatible SmartPOS device available for testing and integration
+
+### Integration Steps
+
+<Steps>
+  <Step title="Create a New Android Studio Project">
+    - Launch Android Studio and select "Create New Project" from the welcome screen
+    - Choose the desired project template and configure your project settings
+    - Click "Finish" to create the project
+  </Step>
+  <Step title="Import the SmartPOS API Library">
+    Copy the SmartPOS API library (.aar file) into your project's "libs" directory, then:
+    - In Android Studio, go to **Project Structure** > **Dependencies**
+    - Click the **+** under "All dependencies"
+    - Choose **JAR/AAR Dependency**, type `libs` under Step 1 and click OK
+    - Click **Apply** to automatically modify the build.gradle file
+  </Step>
+  <Step title="Configure Dependencies">
+    Your build.gradle should now include:
+
+    ```kotlin
+    dependencies {
+        implementation(fileTree(mapOf(
+            "dir" to "libs",
+            "include" to listOf("*.aar", "*.jar"),
+        )))
     }
+    ```
+  </Step>
+  <Step title="Sync and Build">
+    - Sync the Gradle files by clicking "Sync Now" or selecting **File** > **Sync Project with Gradle Files**
+    - Build the project by selecting **Build** > **Make Project**
+  </Step>
+</Steps>
 
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        smartPosApi = null;
-    }
-};
+### Alternative: Maven Repository
 
-// Connect to service
-Intent intent = new Intent();
-intent.setAction("com.worldline.smartpos.api.SERVICE");
-intent.setPackage("com.worldline.smartpos");
-bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+If you prefer to use a Maven repository:
+
+```kotlin
+dependencies {
+    implementation("com.worldline.smartposapi:core:[version]")
+}
 ```
 
-## Available Methods
+<Note>
+As the SmartPOS API is an AIDL interface, we recommend reading the official documentation at [developer.android.com](https://developer.android.com/guide/components/aidl). The service connection should be open only as long as necessary.
+</Note>
 
-| Method | Description |
-|--------|-------------|
-| `getTerminalId()` | Returns the terminal identifier |
-| `getMerchantId()` | Returns the merchant identifier |
-| `getSerialNumber()` | Returns the device serial number |
-| `getSoftwareVersion()` | Returns the SmartPOS software version |
-| `getDeviceModel()` | Returns the terminal model |
+---
 
-## Best Practices
+## 3. Interface Structure
+
+The SmartPOS API provides a set of interfaces and methods to interact with SmartPOS devices and access their features. The API is an AIDL interface - the Service runs on any SmartPOS device Worldline offers.
 
 <Warning>
-Remember to close the service connection as soon as you have retrieved the information you need to avoid memory leaks and resource consumption.
+Before using any API methods, ensure that you have properly integrated the SmartPOS API library and configured the required [permissions](#36-permissions).
 </Warning>
 
-```java
-// Always unbind when done
-@Override
-protected void onDestroy() {
-    super.onDestroy();
-    if (smartPosApi != null) {
-        unbindService(serviceConnection);
+| Interface | Description |
+|-----------|-------------|
+| **SmartPOS Info** | Access generic informal data on the SmartPOS device for analysis, reporting, or customizing user experience |
+| **Security** | Establish secure connections with compliant cipher suites for confidentiality and integrity |
+| **Printer** | Interact with the hardware printer for receipts and documents |
+| **NFC Reader** | Read and write to MIFARE and FELICA chip cards using NFC technology |
+| **ChipCard Reader** | Read Belgium eID cards |
+| **Feature Check** | Validate supported features of the SmartPOS device |
+
+---
+
+### 3.1 SmartPOS Info
+
+The SmartPOS Info block provides methods to retrieve various information and statistics about the SmartPOS device.
+
+#### Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getBatteryStatus()` | `BatteryStatus` | Current battery level and charging status |
+| `getCPUStats()` | `CPUStats` | CPU load and process count |
+| `getDeviceMode()` | `DeviceMode` | Production or development mode |
+| `getFirmwareVersion()` | `String` | Firmware version |
+| `getMemoryStats()` | `MemoryStats` | Total and free memory |
+| `getNetworkInfo()` | `NetworkInfo` | MAC address, available and active networks |
+| `getSerialNumber()` | `String` | Device serial number |
+| `getSimData()` | `MutableList&lt;Sim&gt;` | SIM card data (IMEI, Slot ID, APNs) |
+| `getSimSlotIds()` | `MutableList&lt;String&gt;` | Available SIM card slot IDs |
+| `getModuleSupported()` | `List&lt;Module&gt;` | Supported hardware modules |
+
+#### APN Management
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `selectSimApn()` | `slotId: String?, apn: Apn?` | `ApnStatus` | Select APN configuration for SIM slot |
+| `deleteSimApn()` | `slotId: String?, apn: Apn?` | `ApnStatus` | Delete APN configuration from SIM slot |
+
+#### System UI Control (New in 1.7)
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `setNavigationBar()` | `visible: Boolean` | `Boolean` | Show/hide navigation bar system-wide |
+| `setStatusBar()` | `expandable: Boolean` | `Boolean` | Enable/disable notification shade expansion |
+
+<Warning>
+These UI control methods affect the entire device, not just the calling application's context. If the status bar is expanded when disabled, it will not be retracted automatically.
+</Warning>
+
+#### Module Support
+
+The `Module` class represents hardware modules that may be supported:
+
+| Module | Description |
+|--------|-------------|
+| `MAGSTRIPE_READER` | Magnetic stripe reader |
+| `ICC_READER` | Contact chip card reader |
+| `PICC_READER` | Contactless card reader |
+| `PED` | PIN Entry Device |
+| `KEYBOARD` | Physical keyboard |
+| `PRINTER` | Receipt printer |
+| `BT` | Bluetooth connectivity |
+| `CASH_BOX` | Cash drawer |
+| `CUSTOMER_DISPLAY` | Customer-facing display |
+| `ETHERNET` | Ethernet connectivity |
+| `FINGERPRINT_READER` | Fingerprint reader |
+| `G_SENSOR` | Gravity sensor |
+| `HDMI` | HDMI port |
+| `ID_CARD_READER` | ID card reader |
+| `SM` | Security module |
+| `MODEM` | Network modem |
+| `SCANNER` | Barcode scanner |
+
+---
+
+### 3.2 Security
+
+The Security block provides methods related to creating secure connections with compliant cipher suites.
+
+#### Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `requestSupportedCiphers()` | `MutableList&lt;String&gt;` | List of supported cipher suites for secure connections |
+
+---
+
+### 3.3 Printer
+
+The Printer block provides methods to interact with the hardware printer integrated into the SmartPOS device.
+
+#### Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `registerPrinterListener()` | `printerListener: IPrinterListener` | - | Register for printer events |
+| `unregisterPrinterListener()` | `printerListener: IPrinterListener` | - | Unregister printer listener |
+| `getStatusOfPrinter()` | - | `PrinterStatus` | Get printer status (deprecated) |
+| `getExtendedStatusOfPrinter()` | - | `ExtendedPrinterStatus` | Get detailed printer status |
+| `getMaxCharactersPerLine()` | `printLineObject: PrintLineObject` | `Int` | Max characters per line |
+| `printDocument()` | `document: List&lt;PrintObject&gt;` | `PrintResult` | Print a list of print objects |
+
+#### Print Objects
+
+<Tabs>
+  <Tab title="Text Objects">
+    **PrintLineObject** - Single line of text
+    - `data` (String): Text to print
+    - `printLineProperties` (PrintLineProperties): Layout properties (optional)
+
+    **PrintEmptyLines** - Empty lines
+    - `amountOfEmptyLines` (Int): Number of empty lines
+    - `lineHeight` (Int): Height in pixels
+
+    **PrintLeftRightInLine** - Left/right aligned text
+    - `printLineObjectLeft` (PrintLineObject): Left-aligned text
+    - `printLineObjectRight` (PrintLineObject): Right-aligned text
+
+    **PrintListOfLines** - Multiple lines
+    - `listOfLines` (List&lt;PrintLineObject&gt;): List of lines to print
+  </Tab>
+  <Tab title="Graphics Objects">
+    **PrintBarcodeObject** - Barcode printing
+    - `contents` (String): Data to encode
+    - `barcodeFormat` (String): Barcode format
+    - `printBarcodeProperties` (PrintBarcodeProperties): Layout properties (optional)
+
+    **PrintImageObject** - Image printing
+    - `imageSource` (ImageSource): Source of the image
+    - `imageProperties` (ImageProperties): Layout properties (optional)
+  </Tab>
+  <Tab title="Properties">
+    **PrintLineProperties**
+    - `fontSize` (Int): Font size (Microsoft Word style)
+    - `typeface` (String): Font typeface
+    - `textAlignment` (String): Text alignment
+    - `isBold` (Boolean): Bold text
+    - `isItalic` (Boolean): Italic text
+    - `isUnderline` (Boolean): Underlined text
+
+    **PrintBarcodeProperties**
+    - `canvasHeight`, `barcodeWidth`, `barcodeHeight` (Int): Dimensions in pixels
+    - `startDrawPositionX`, `startDrawPositionY` (Int): Draw position
+
+    **ImageSource**
+    - `imagePath` (String): Path on device
+    - `imageContentProviderUrl` (String): Content provider URI
+    - `imageByteArray` (ByteArray): Image as byte array
+
+    **ImageProperties**
+    - `canvasHeight`, `imageWidth`, `imageHeight` (Int): Dimensions in pixels
+    - `startDrawPositionX`, `startDrawPositionY` (Int): Draw position
+  </Tab>
+</Tabs>
+
+---
+
+### 3.4 NFC & ChipCard Reader
+
+The NFC & ChipCard Reader block allows reading and writing to chip cards using NFC technology and contact chip readers.
+
+#### NFC Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `readMifareSectors()` | `mifareSectorRequest: MifareSectorRequest` | `CardReadResultMifareSector` | Read MIFARE sectors |
+| `readNfcData()` | `auth: String?` | `CardReadResult` | Read NFC data with optional auth |
+| `readNfcUID()` | - | `CardReadResult` | Read NFC card UID |
+| `writeMifareSectors()` | `mifareSectorRequest: MifareSectorRequest` | `CardReadResult` | Write to MIFARE sectors |
+| `writeNfcData()` | `auth: String?, data: String?` | `CardReadResult` | Write NFC data |
+| `sendFelicaCommand()` | `command: ByteArray, bufferSize: Int, closeAfterResponse: Boolean, timeout: Long` | `NfcCommandResponse` | Send FeliCa command |
+| `openCardReader()` | `timeout: Long` | `CardOpenResult` | Open NFC reader and get ATR |
+| `sendAPDU()` | `apdu: ByteArray, bufferSize: Int, closeAfterResponse: Boolean` | `NfcCommandResponse` | Send APDU command |
+| `closeCardReader()` | - | - | Close reader and release ownership |
+
+<Note>
+`openCardReader()` must be called before sending APDU commands. After a successful open, exclusive access is granted for the timeout duration.
+</Note>
+
+#### ChipCard Methods (Belgium eID)
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `readEidData()` | `isoCountryCode: String?` | `CardReadResult` | Read Belgium eID data |
+| `readUID()` | - | `CardReadResult` | Read chip card UID |
+| `openCardReader()` | `timeout: Int` | `CardOpenResult` | Open reader and get ATR |
+| `sendAPDU()` | `apdu: byte[], bufferSize: Int, closeAfterResponse: boolean` | `ApduResponse` | Send APDU command |
+| `closeCardReader()` | - | - | Close reader |
+
+#### APDU Example
+
+```kotlin
+// Open the card reader with a timeout of 5 seconds
+val openResult: CardOpenResult = chipCardReaderService.openCardReader(5000)
+
+if (openResult.status == CardReadStatus.SUCCESS) {
+    val atr: String = openResult.atr
+
+    // Send an APDU command
+    val commandApdu: ByteArray = byteArrayOf(0x00, 0xA4, 0x04, 0x00, 0x0A)
+    val bufferSize: Int = 255
+    val closeAfterResponse: Boolean = true
+
+    val apduResponse: ApduResponse = chipCardReaderService.sendAPDU(
+        commandApdu, bufferSize, closeAfterResponse
+    )
+
+    when (apduResponse.status) {
+        CardReadStatus.SUCCESS -> {
+            val responseData: ByteArray = apduResponse.data
+            // Process response data
+        }
+        CardReadStatus.OPERATION_NOT_ALLOWED -> {
+            // APDU command not whitelisted
+            val errorMessage: String = apduResponse.errorMessage
+        }
+        else -> {
+            val errorMessage: String = apduResponse.errorMessage
+        }
+    }
+
+    chipCardReaderService.closeCardReader()
+} else {
+    val errorMessage: String = openResult.errorMessage
+}
+```
+
+---
+
+### 3.5 Feature Check
+
+The Feature Check block provides methods for validating the availability of specific features supported by the SmartPOS device.
+
+<Note>
+Not all features are supported by every terminal. For example, some devices have an integrated printer and some do not.
+</Note>
+
+#### Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `getAvailableFeatures()` | - | `MutableList&lt;Feature&gt;` | List of available features |
+| `isFeatureAvailable()` | `feature: Feature?` | `Boolean` | Check if specific feature is available |
+
+---
+
+### 3.6 Permissions
+
+The SmartPOS API provides access to the NFC and ChipCard readers which require runtime permissions.
+
+<Warning>
+If your application doesn't need NFC or ChipCard Reader access, you can skip this step. Other interfaces do not require runtime permissions.
+</Warning>
+
+#### AndroidManifest.xml
+
+```xml
+<uses-permission android:name="com.worldline.smartposapi.worldline.permission.NFC"/>
+<uses-permission android:name="com.worldline.smartposapi.worldline.permission.CHIP_CARD_READER"/>
+```
+
+#### Runtime Permission Request
+
+```kotlin
+class TestActivity : AppCompatActivity() {
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions(),
+            ::onPermissionResult
+        )
+
+    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
+        super.onCreate(savedInstanceState, persistentState)
+        checkAndRequestPermission()
+    }
+
+    private fun checkAndRequestPermission() {
+        val hasNfc = ContextCompat.checkSelfPermission(
+            this, Permissions.NFC
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val hasChipCardReader = ContextCompat.checkSelfPermission(
+            this, Permissions.CHIP_CARD_READER
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!(hasNfc && hasChipCardReader)) {
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    Permissions.NFC,
+                    Permissions.CHIP_CARD_READER
+                )
+            )
+        }
+    }
+
+    private fun onPermissionResult(permissionMap: Map<String, Boolean>) {
+        val refusedPermissions = permissionMap.filter { (_, v) -> !v }
+        if (refusedPermissions.isEmpty()) {
+            // All permissions granted
+        } else {
+            // Some permissions were not granted
+        }
     }
 }
 ```
 
-## Resources
+---
+
+### 3.7 Service Connection
+
+As an AIDL interface, you must establish a connection for each service you want to use. See the [Android AIDL documentation](https://developer.android.com/guide/components/aidl#Calling) for details.
+
+#### Example: Feature Check Service Connection
+
+```kotlin
+class MainActivity : ComponentActivity() {
+
+    companion object {
+        private const val DEFAULT_SMARTPOS_API_PACKAGE = "com.worldline.smartposapi.service"
+    }
+
+    var iFeatureCheckService: IFeatureCheckService? = null
+
+    private val serviceConnectionFeatureCheck = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName?, service: IBinder?) {
+            iFeatureCheckService = IFeatureCheckService.Stub.asInterface(service)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            iFeatureCheckService = null
+            Toast.makeText(
+                applicationContext,
+                "Service has unexpectedly disconnected",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun bindToFeatureCheck() {
+        try {
+            val intent = Intent(BindingActions.FEATURE_CHECK)
+            intent.putExtra(BindingExtras.API_VERSION, "v1")
+            intent.setPackage(DEFAULT_SMARTPOS_API_PACKAGE)
+            bindService(
+                intent,
+                serviceConnectionFeatureCheck,
+                Context.BIND_AUTO_CREATE
+            ).also {
+                Log.d("MainActivity", "Bind Feature Check: $it")
+            }
+        } catch (e: Exception) {
+            Log.d("MainActivity", "Not able to bind!")
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        bindToFeatureCheck()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unbindService(serviceConnectionFeatureCheck)
+    }
+}
+```
+
+<Warning>
+Always unbind from services when done to avoid memory leaks and resource consumption.
+</Warning>
+
+---
+
+## 4. Glossary
+
+### 4.1 Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection Issues">
+    If you are experiencing connection problems with the SmartPOS device:
+    - Ensure the SmartPOS device is powered on and within range
+    - Verify the device address or connection parameters are correct
+    - Check WIFI/ethernet settings on both devices
+    - Restart both the SmartPOS device and your device
+  </Accordion>
+  <Accordion title="API Initialization Issues">
+    If you are facing issues during initialization:
+    - Double-check that you have imported the correct classes from the SmartPOS API library
+    - Ensure you have connected to the SmartPOS service properly
+    - Verify necessary permissions are declared in your Android manifest file
+  </Accordion>
+  <Accordion title="Functional Issues">
+    If you are encountering problems with specific API functionalities:
+    - Review the documentation and ensure you are using the correct methods and parameters
+    - Check for required permissions or additional configurations
+    - Validate that the SmartPOS device supports the feature you are trying to use
+    - Ensure you are handling API responses and errors appropriately
+  </Accordion>
+  <Accordion title="Device Compatibility">
+    If you are unsure about device compatibility:
+    - Refer to the SmartPOS API documentation or contact support to confirm compatibility
+    - Check for specific requirements or limitations related to your SmartPOS device model
+  </Accordion>
+  <Accordion title="Error Messages and Logs">
+    Pay attention to error messages or logs provided by the API or device. These provide valuable insights into the cause of issues. Capture and analyze them for troubleshooting purposes.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+Keep your SmartPOS API version and firmware up to date to ensure compatibility and access to the latest features and bug fixes.
+</Note>
+
+---
+
+## Related Resources
 
 <CardGroup cols={2}>
-  <Card title="Start Developing" icon="code" href="/smartpos/app-development/index">
-    Development best practices
+  <Card title="SmartPOS API Overview" icon="info-circle" href="/smartpos/smartpos-api/index">
+    Introduction to SmartPOS API
   </Card>
   <Card title="WPI Documentation" icon="plug" href="/smartpos/wpi/index">
     Payment integration with WPI
+  </Card>
+  <Card title="App Development" icon="code" href="/smartpos/app-development/index">
+    Development best practices
+  </Card>
+  <Card title="App Testing" icon="flask" href="/smartpos/app-development/app-testing">
+    Testing procedures
   </Card>
 </CardGroup>

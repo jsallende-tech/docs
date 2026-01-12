@@ -1,0 +1,225 @@
+---
+title: "Retrieve Payment Information"
+description: "Learn how to query payment solution information using WPI Background Service"
+---
+
+# WPI V2.X Payment Information Codelab
+
+<Info>
+**Estimated time:** 31 minutes
+</Info>
+
+## Overview
+
+The Worldline Payment Interface (WPI) is an Android intent-based interface that enables easy and fast integration with payment apps. This codelab focuses on retrieving payment information using the **Background Action** service type.
+
+### What You'll Learn
+
+- Send a service request for Payment Information using the WPI V2.X interface
+- See the response from the Payment Solution on screen
+- Create a simple business app that retrieves the Payment Information from the Payment Solution
+
+## Getting Set Up
+
+### Get the Code
+
+<Card title="Download Sample Code" icon="download" href="/assets/smartpos/wpi-codelabs/wpi-payment-information.zip">
+  WPI Payment Information Codelab Sample Code (ZIP)
+</Card>
+
+### Project Structure
+
+The project contains:
+- **start** – starter code for this project
+- **finished_code** – complete solution
+
+<Warning>
+For this codelab we will use Android Studio Narwhal Feature Drop, SDK 36 and Gradle 8.14.3. Please verify that you have a payment application running on your device.
+</Warning>
+
+## Interface Structure
+
+For information requests, WPI uses a **Background Action**:
+
+| Type | Action Type | Intent | Purpose |
+|------|-------------|--------|---------|
+| Financial | Display Action | `com.worldline.payment.action.PROCESS_TRANSACTION` | Process a financial transaction |
+| Management | Display Action | `com.worldline.payment.action.PROCESS_MANAGEMENT` | Trigger payment solution managed actions |
+| Information | Background Action | `com.worldline.payment.action.PROCESS_INFORMATION` | Background management of payment solution info |
+
+<Note>
+The information request is a background action, meaning the payment solution will not show any UI when this intent is called. This is useful for requests that do not require user interaction, such as fetching configuration data.
+</Note>
+
+For background actions, we use the [Android Messenger Service](https://developer.android.com/develop/background-work/services/bound-services#Messenger) to get the response.
+
+### Information Service Types
+
+| Service Type | Purpose |
+|--------------|---------|
+| `WPI_SVC_LAST_TRANSACTION` | Recovery feature - know the status of latest transaction based on Session ID |
+| `WPI_SVC_PAYMENT_INFORMATION` | Retrieve payment solution configuration and capabilities |
+
+### Response Data: Payment Solution Information
+
+| Field Name | Description | Type |
+|------------|-------------|------|
+| `result` | Result of the request (success or failure) | String |
+| `errorCondition` | Specific error reason | String |
+| `softwareVersion` | Software version of the payment solution | String |
+| `terminalIdentifier` | Terminal identifier | String |
+| `terminalModel` | Terminal model of the device | String |
+| `supportedLanguages` | Languages supported by the payment solution | Array |
+| `defaultCurrency` | Default currency | String |
+| `supportedCurrencies` | Currencies the payment solution supports | Array |
+| `supportedTicketFormats` | Receipt formats supported | Array |
+| `paymentSolutionSupportedServiceTypes` | Supported service types | Array |
+| `supportsManualPanKeyEntry` | Whether manual card entry is activated | Boolean |
+| `supportsTip` | Whether tip is supported | Boolean |
+
+## AndroidManifest: Declaring Intent Queries (API 30+)
+
+Add to your `AndroidManifest.xml`:
+
+```xml
+<queries>
+    <intent>
+        <action android:name="com.worldline.payment.action.PROCESS_INFORMATION" />
+    </intent>
+    <intent>
+        <action android:name="com.worldline.payment.action.PROCESS_TRANSACTION" />
+    </intent>
+    <intent>
+        <action android:name="com.worldline.payment.action.PROCESS_MANAGEMENT" />
+    </intent>
+</queries>
+```
+
+## Create Request Message for Payment Information
+
+Create a bundle with the mandatory extras:
+
+```kotlin
+val paymentInformationBundle = bundleOf(
+    "WPI_SERVICE_TYPE" to "WPI_SVC_PAYMENT_INFORMATION",
+    "WPI_VERSION" to "2.1",
+    "WPI_SESSION_ID" to UUID.randomUUID().toString()
+)
+```
+
+## Bind to the Messenger Service
+
+### Define ServiceConnection
+
+```kotlin
+/** Messenger for communicating with the service */
+private var mService: Messenger? = null
+
+/** Flag indicating whether we have called bind on the service */
+private var bound: Boolean = false
+
+/**
+ * Class for interacting with the main interface of the service.
+ */
+private val mConnection = object : ServiceConnection {
+    override fun onServiceConnected(className: ComponentName, service: IBinder) {
+        mService = Messenger(service)
+        bound = true
+    }
+
+    override fun onServiceDisconnected(className: ComponentName) {
+        bound = false
+    }
+}
+```
+
+### Bind the Service in onStart
+
+```kotlin
+override fun onStart() {
+    super.onStart()
+    val intent = Intent("com.worldline.payment.action.PROCESS_INFORMATION").apply {
+        component = getWpiSupportedServices("com.worldline.payment.action.PROCESS_INFORMATION").first()
+        putExtras(paymentInformationBundle)
+    }
+    bindService(intent, mConnection, Context.BIND_AUTO_CREATE)
+}
+```
+
+### Helper Function
+
+```kotlin
+private fun Context.getWpiSupportedServices(action: String): List<ComponentName> {
+    val intent = Intent(action)
+    return packageManager.queryIntentServices(intent, 0)
+        .mapNotNull { ComponentName(it.serviceInfo.packageName, it.serviceInfo.name) }
+}
+```
+
+## Create and Send the Messenger Request
+
+```kotlin
+private lateinit var updateJson: (String) -> Unit
+
+private fun executePaymentInformation() {
+    val message = Message.obtain(
+        null,
+        895349,
+        paymentInformationBundle
+    )
+    val handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                895349 -> {
+                    val data = msg.obj as? Bundle
+                    val response = data?.getString("WPI_RESPONSE") ?: "No response"
+                    updateJson(response)
+                }
+                else -> throw IllegalArgumentException("${msg.what} is an incorrect message identifier.")
+            }
+        }
+    }
+    val messenger = Messenger(handler)
+    message.replyTo = messenger
+    mService?.send(message)
+}
+```
+
+## Display the Response in Your UI
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent {
+        var paymentInfoJson by remember { mutableStateOf("") }
+        updateJson = { paymentInfoJson = it }
+        PaymentInfoScreen(paymentInfoJson) {
+            executePaymentInformation()
+        }
+    }
+}
+```
+
+When you run the app and click the button, you should see the response from the payment solution in JSON format.
+
+## Congratulations!
+
+You've successfully completed this codelab and learned how to request payment information with the WPI!
+
+<Check>
+**What you learned:**
+- How to create an intent request
+- How to bind to a Messenger service
+- How to receive and display the response
+</Check>
+
+### Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Retry Logic Codelab" icon="rotate" href="/smartpos/wpi/codelabs/retry-logic">
+    Implement robust retry mechanisms
+  </Card>
+  <Card title="WPI 2.1 Specification" icon="book" href="/smartpos/wpi/wpi-version-2-1">
+    Complete API reference
+  </Card>
+</CardGroup>

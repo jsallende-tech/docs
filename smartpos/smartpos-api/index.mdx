@@ -1,63 +1,101 @@
 ---
 title: "SmartPOS API Overview"
-description: "SmartPOS API for accessing terminal information and services"
+description: "SmartPOS API for accessing terminal hardware features and services on SmartPOS devices"
 ---
 
 # SmartPOS API Overview
 
-The SmartPOS API provides a set of interfaces for business applications to access terminal-specific information and services on Worldline SmartPOS devices.
+The SmartPOS API is an abstraction layer that provides developers with access to the features and capabilities of SmartPOS devices, which are specialized Android-based devices designed for payment processing and related applications.
 
-## What is SmartPOS API?
+<Frame>
+  <img src="/images/smartpos-api-overview.png" alt="SmartPOS API Overview" />
+</Frame>
 
-The SmartPOS API allows your applications to:
+## Why Should You Use SmartPOS API?
+
+Compared to standard Android devices, SmartPOS devices have a number of additional features and capabilities that make them well-suited for use in payment processing and related applications:
 
 <CardGroup cols={2}>
-  <Card title="Terminal Information" icon="info-circle">
-    Access terminal identification, configuration, and status information
+  <Card title="Built-in Printer" icon="print">
+    Access to the integrated hardware printer for receipts and documents
   </Card>
-  <Card title="Merchant Data" icon="store">
-    Retrieve merchant-related information configured on the terminal
+  <Card title="Security Interface" icon="shield-halved">
+    Ensure confidentiality and integrity of data exchanged between your application and the device
   </Card>
-  <Card title="Device Capabilities" icon="microchip">
-    Query hardware capabilities and supported features
+  <Card title="Card Readers" icon="credit-card">
+    Access to contactless and contact card readers for non-payment use cases in your application
   </Card>
-  <Card title="System Services" icon="gears">
-    Interact with system-level services on the SmartPOS device
+  <Card title="Device Information" icon="info-circle">
+    Access device-specific information for analysis or customizing user experience
   </Card>
 </CardGroup>
 
-## When to Use SmartPOS API
+## How to Use SmartPOS API?
 
-Use the SmartPOS API when your application needs to:
+The SmartPOS API is an Android service that can be integrated into any Business application. It provides access to a range of hardware features and capabilities that are specific to SmartPOS devices, including NFC reading/writing, printers and more. It also provides access to system information, which is essential for ensuring the security and confidentiality of sensitive information.
 
-- Display terminal or merchant information to users
-- Adapt behavior based on terminal capabilities
-- Integrate with terminal management systems
-- Access device-specific features not available through WPI
+To use the SmartPOS API, developers need to:
+
+<Steps>
+  <Step title="Obtain a SmartPOS Device">
+    Get a SmartPOS device from Worldline for development and testing
+  </Step>
+  <Step title="Add the Library">
+    Integrate the SmartPOS API library into your Android application
+  </Step>
+  <Step title="Connect to the Service">
+    Bind to the SmartPOS API service using Android's AIDL interface
+  </Step>
+  <Step title="Use the Features">
+    Access hardware features like printer, NFC, and security services
+  </Step>
+</Steps>
+
+<Card title="Read Full SmartPOS API Specification" icon="file-code" href="/smartpos/smartpos-api/smartpos-api-version-1-7">
+  Complete API reference with all methods and code examples
+</Card>
+
+## Where Can You Use SmartPOS API?
+
+SmartPOS API is currently available on the following devices offered by Worldline:
+
+| Device | Model |
+|--------|-------|
+| Ingenico VALINA | Android SmartPOS terminal |
+| Castles Saturn 1000F2 | S1F2 |
+| Castles Saturn 1000UPT2 | S1U2 |
+| Castles Saturn 1000P | S1P |
+
+## API Interfaces
+
+The SmartPOS API provides several interfaces for different functionality:
+
+| Interface | Description |
+|-----------|-------------|
+| **SmartPOS Info** | Access generic information about the SmartPOS device for analysis, reporting, or customizing user experience |
+| **Security** | Establish secure connections with compliant cipher suites for confidential data exchange |
+| **Printer** | Interact with the hardware printer for receipts and documents |
+| **NFC Reader** | Read and write to MIFARE and FELICA chip cards using NFC technology |
+| **ChipCard Reader** | Read Belgium eID cards |
+| **Feature Check** | Validate supported features of the SmartPOS device |
 
 <Note>
 For payment processing, use the [WPI (Worldline Payment Interface)](/smartpos/wpi/index). SmartPOS API is complementary to WPI for non-payment related terminal interactions.
 </Note>
 
-## API Versions
+## Related Resources
 
-<Card title="SmartPOS API 1.7" icon="file-code" href="/smartpos/smartpos-api/smartpos-api-version-1-7">
-  Current version with full feature set
-</Card>
-
-## Getting Started
-
-<Steps>
-  <Step title="Review Documentation">
-    Familiarize yourself with the SmartPOS API specification.
-  </Step>
-  <Step title="Add Dependencies">
-    Include the SmartPOS API library in your Android project.
-  </Step>
-  <Step title="Bind to Service">
-    Connect to the SmartPOS service from your application.
-  </Step>
-  <Step title="Query Information">
-    Use the API methods to retrieve terminal information.
-  </Step>
-</Steps>
+<CardGroup cols={2}>
+  <Card title="SmartPOS API 1.7" icon="book" href="/smartpos/smartpos-api/smartpos-api-version-1-7">
+    Full API specification and reference
+  </Card>
+  <Card title="WPI Documentation" icon="plug" href="/smartpos/wpi/index">
+    Payment integration with WPI
+  </Card>
+  <Card title="App Development" icon="code" href="/smartpos/app-development/index">
+    Development best practices
+  </Card>
+  <Card title="SDK" icon="toolbox" href="/smartpos/app-development/sdk">
+    SDK and development tools
+  </Card>
+</CardGroup>

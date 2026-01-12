@@ -11,8 +11,12 @@ description: "WPI 2.0 Specification - Complete reference for Worldline Payment I
 
 1. [Overview](#overview)
 2. [Interface Structure](#interface-structure)
-3. [Payment Solution Implementation](#payment-solution-implementation)
-4. [Data Dictionary](#data-dictionary)
+3. [Service Types](#service-types)
+4. [Payment Solution Implementation](#payment-solution-implementation)
+5. [Data Dictionary](#data-dictionary)
+6. [Financial Transactions](#financial-transactions)
+7. [Management Actions](#management-actions)
+8. [Information Services](#information-services)
 
 ---
 
@@ -100,69 +104,631 @@ The WPI provides a set of intents that developers can use to build apps that wor
   </Tab>
 </Tabs>
 
+### Request Extras
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WPI_SERVICE_TYPE` | Specify the subtype of action to be executed | String | Mandatory |
+| `WPI_REQUEST` | JSON structured data mandatory for given service type | String | Mandatory for Financial, Optional for Management |
+| `WPI_VERSION` | Used WPI version | String | Mandatory |
+| `WPI_SESSION_ID` | Identifier of a WPI exchange between client and payment application. Must be unique, part of response, and not reused for subsequent requests (except for last transaction recovery) | String | Mandatory |
+
+<Warning>
+Any business application should store the `WPI_SESSION_ID` before sending the intent. This allows the business application to recover with the last transaction function to check the outcome of a previous transaction in case of a crash.
+</Warning>
+
+### Response Extras
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WPI_SERVICE_TYPE` | Specify the subtype of action that was executed | String | Mandatory |
+| `WPI_RESPONSE` | JSON structured data processed for the requested service type | String | Mandatory |
+| `WPI_VERSION` | Used WPI version | String | Mandatory |
+| `WPI_SESSION_ID` | Identifier of a WPI exchange provided by the client | String | Mandatory |
+
+---
+
+## Service Types
+
+Each intent has several service types that specify the request.
+
+### Financial Service Types
+
+| Service Type | Purpose |
+|--------------|---------|
+| `WPI_SVC_PAYMENT` | Perform a simple sale transaction (purchase) |
+| `WPI_SVC_CANCEL_PAYMENT` | Reverse a previous transaction |
+| `WPI_SVC_REFUND` | Refund a previous transaction |
+| `WPI_SVC_PRE_AUTHORIZATION` | Perform a reservation |
+| `WPI_SVC_CANCEL_PRE_AUTHORIZATION` | Cancel a previous reservation |
+| `WPI_SVC_UPDATE_PRE_AUTHORIZATION` | Increment a previous reservation |
+| `WPI_SVC_CANCEL_UPDATE_PRE_AUTHORIZATION` | Cancel the previous incrementation of a reservation |
+| `WPI_SVC_PAYMENT_COMPLETION` | Purchase a reservation / incremented reservation |
+| `WPI_SVC_CANCEL_PAYMENT_COMPLETION` | Cancel the purchased reservation |
+| `WPI_SVC_DEFERRED_PAYMENT_AUTHORIZATION` | Execute a deferred payment authorization (energy solution use-case) |
+| `WPI_SVC_DEFERRED_PAYMENT_COMPLETION` | Execute a deferred payment completion of a previous authorization |
+| `WPI_SVC_PAYMENT_INSTRUMENT_RECOGNITION` | Payment card or non-payment card recognition without performing a real transaction |
+| `WPI_SVC_FOLLOW_ON_CREDIT` | Referenced based credit transaction based on a previous transaction |
+
+### Management Service Types
+
+| Service Type | Purpose |
+|--------------|---------|
+| `WPI_SVC_PAYMENT_MENU` | Open the payment solution menu |
+| `WPI_SVC_DAY_END` | Upload transactions to perform final settlement |
+| `WPI_SVC_PAYMENT_PARAMETERIZATION` | Fetch latest payment solution configuration |
+| `WPI_SVC_ACQUIRER_PARAMETERIZATION` | Fetch latest acquirer parameters |
+| `WPI_SVC_PRINT_RECEIPT` | Receipt printing |
+| `WPI_SVC_ABORT` | Abort an ongoing transaction |
+
+### Information Service Types
+
+| Service Type | Purpose |
+|--------------|---------|
+| `WPI_SVC_LAST_TRANSACTION` | Return the last transaction result |
+| `WPI_SVC_PAYMENT_INFORMATION` | Retrieve payment solution information and supported service types |
+
 ---
 
 ## Payment Solution Implementation
 
-### Transaction Flow
+### Mandatory Attributes and Result Structure
 
-<Steps>
-  <Step title="Initialize">
-    Create the intent with required parameters
-  </Step>
-  <Step title="Send Intent">
-    Start the activity with the payment intent
-  </Step>
-  <Step title="Process">
-    Payment solution processes the transaction
-  </Step>
-  <Step title="Receive Response">
-    Handle the response in onActivityResult
-  </Step>
-</Steps>
+- The technical design defines only mandatory attributes in the request needed to meet every business use case, aiming to be payment protocol agnostic
+- The payment solution shall support every combination of attributes defined in the request
+- The result structure contains every possible attribute to be returned
 
-### Sample Code
+### Payment Solution Reference
 
-```java
-// Create payment intent
-Intent paymentIntent = new Intent("com.worldline.payment.action.PROCESS_TRANSACTION");
+The payment solution reference must be designed in a unique way so that all follow-on transactions can be handled with it.
 
-// Add required extras
-Bundle extras = new Bundle();
-extras.putString("WPI_SERVICE_TYPE", "PURCHASE");
-extras.putLong("WPI_AMOUNT", 1000); // Amount in cents
-extras.putString("WPI_CURRENCY", "EUR");
-extras.putString("WPI_SESSION_ID", UUID.randomUUID().toString());
+<Note>
+The `paymentSolutionReference` is printed on the receipt as a QR Code:
+- Compliant with ISO/IEC 18004:2015 (or higher) standard
+- Highest (H) error correction level
+- QR Code version selected according to data length
+- Content limited to `paymentSolutionReference` value only (raw data)
+</Note>
 
-paymentIntent.putExtras(extras);
+### Error Handling
 
-// Start payment activity
-startActivityForResult(paymentIntent, PAYMENT_REQUEST_CODE);
-```
+- The payment solution shall provide a remark that is understandable by a third-party integrator, only in case of an error condition not equal to `WPI_ERR_COND_NONE`
+- The payment solution shall return `WPI_ERR_COND_BUSY` in case of a transaction currently in progress
+
+### Versioning
+
+The WPI uses versioning with the format Y.X (e.g., 1.0, 2.1):
+
+- **Y (Major Version)**: Significant milestone with potential breaking changes. A payment solution for version 1.1 must remain compatible with version 1.0
+- **X (Minor Version)**: New features or improvements that are backward compatible within the same major version. A version 2.2 request cannot be used with version 1.1
+- **Revision Number**: Specific iteration of a minor version (e.g., "3.2 Revision #9"). Includes small fixes, updates, and improvements
 
 ---
 
 ## Data Dictionary
 
-### Common Fields
+### Request Data
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `WPI_SERVICE_TYPE` | String | Type of transaction (PURCHASE, REFUND, etc.) |
-| `WPI_AMOUNT` | Long | Transaction amount in smallest currency unit |
-| `WPI_CURRENCY` | String | ISO 4217 currency code |
-| `WPI_SESSION_ID` | String | Unique session identifier |
-| `WPI_VERSION` | String | WPI version being used |
+All data must be provided as JSON in the `WPI_REQUEST` extra.
 
-### Response Fields
+| Field Name | Description | Type |
+|------------|-------------|------|
+| `currency` | Currency of the amount. Alpha code value defined in ISO 4217 (e.g., `EUR`) | String |
+| `requestedAmount` | Total payment amount as minor unit. For example, 11.91 EUR must be sent as `1191` | Integer |
+| `paymentSolutionReference` | Previous transaction reference used for subsequent transactions. Defined by the payment application | String |
+| `reference` | Reference to be sent to the payment solution for reconciliation | String |
+| `productRecords` | Product catalogue for energy solution based use-cases | Array ([Product Record Item](#product-record-item)) |
+| `receiptFormat` | Override the default receipt format | Array ([Receipt Format](#receipt-format)) |
+| `receiptDelegation` | Deactivate payment solution receipt handling. Default: `true` | Boolean |
+| `recognitionTimeout` | Timeout before an error will be returned in milliseconds | Integer |
+| `recognitionOptions` | Card recognition options | Array ([Recognition Option](#recognition-option)) |
+| `receiptTarget` | Defines which receipt shall be printed | String ([Receipt Target](#receipt-target)) |
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `WPI_RESULT_CODE` | Integer | Result code of the operation |
-| `WPI_AUTHORIZATION_CODE` | String | Authorization code from acquirer |
-| `WPI_TRANSACTION_ID` | String | Unique transaction identifier |
-| `WPI_RECEIPT` | String | Receipt data |
+### Product Record Item
+
+Product Records are items exchanged between the integrator and the issuer. The Payment Solution only sends the information.
+
+| Field Name | Description | Type |
+|------------|-------------|------|
+| `itemId` | Identifier of the item aligned with the issuer | Integer |
+| `label` | Label of the item | String |
+| `unitAmount` | Unit price as minor unit | Integer |
+| `quantity` | Number of units | Integer |
+| `totalAmount` | Total amount as minor unit | Integer |
+| `currency` | Currency of the amount (ISO 4217) | String |
+
+### Receipt Format
+
+The receipt format defines how to retrieve the receipt. Default is `FORMATTED`.
+
+| Value | Purpose |
+|-------|---------|
+| `FORMATTED` | Return the receipt as String (default) |
+| `JSON` | Return the receipt as JSON |
+
+### Recognition Option
+
+| Value | Purpose |
+|-------|---------|
+| `WPI_RECOGNITION_OPTION_RETURN_CUSTOMER_TOKEN` | Create a token for the card that was read |
+| `WPI_RECOGNITION_OPTION_RETURN_MIFARE_DETAILS` | Recognize a non-payment card like MIFARE. The UID and card type will be evaluated |
+
+### Receipt Target
+
+| Value | Purpose |
+|-------|---------|
+| `CARDHOLDER` | Print the cardholder receipt |
+| `MERCHANT` | Print the merchant receipt |
+| `BOTH` | Print both merchant and cardholder receipts one after the other |
+
+### Response Data
+
+All data is provided as JSON in the `WPI_RESPONSE` extra.
+
+| Field Name | Description | Type |
+|------------|-------------|------|
+| `result` | Result of the transaction | String ([Result](#result)) |
+| `errorCondition` | Specific error reason | String ([Error Condition](#error-conditions)) |
+| `actionCode` | Specific action to be performed by the business application | String ([Action Code](#action-codes)) |
+| `remark` | Terminal/transaction specific message for detailed error descriptions | String |
+| `timestamp` | Date and time of the transaction (ISO 8601 extended format) | String |
+| `currency` | Currency code of the transaction (ISO 4217) | String |
+| `authorizedAmount` | Amount of the transaction, including TIP, as minor unit | Integer |
+| `brandName` | Brand name of used payment card (MasterCard, VISA, AMEX, etc.) | String |
+| `customerLanguage` | Language used on screens (ISO 639-1 alpha-2 code) | String |
+| `applicationIdentifier` | Payment card application identifier (e.g., A0000000041010 for MasterCard) | String |
+| `applicationLabel` | Payment card application label (e.g., MasterCard DEBIT) | String |
+| `receipt` | Contains the requested receipts | Object ([Receipt](#receipts)) |
+| `paymentSolutionReference` | Transaction specific and unique identification | String |
+| `dccUsed` | Whether DCC was used for the transaction | Boolean |
+| `tipAmount` | The tip amount entered by the cardholder | Integer |
+| `reference` | Reference sent to the payment app for reconciliation | String |
+| `softwareVersion` | Payment Solution software version | String |
+| `terminalIdentifier` | Terminal identifier configured for the payment solution | String |
+| `supportedLanguages` | List of supported languages (ISO 639-1) | Array |
+| `cardholderDefaultLanguage` | Configured cardholder default language (ISO 639-1) | String |
+| `merchantLanguage` | Configured merchant default language (ISO 639-1) | String |
+| `countryCode` | Country code of the terminal (ISO 3166-1 alpha-2) | String |
+| `defaultCurrency` | Default currency configured for the payment solution (ISO 4217) | String |
+| `supportedCurrencies` | All currencies supported by the payment solution | Array |
+| `shopInfo` | Shop information of the terminal | Object ([ShopInfo](#shopinfo)) |
+| `acquirerProtocol` | Used acquirer protocol (ep2, CTAP, CB2A, NEXO, ZVT) | String |
+| `supportedTicketFormats` | Supported ticket formats | Array |
+| `supportsReceiptDelegation` | Whether the payment application supports receipt delegation | Boolean |
+| `paymentInformation` | Detailed payment solution information per brand & acquirer | Array ([Payment Information](#payment-information)) |
+| `paymentSolutionSupportedServiceTypes` | Service types supported by the payment solution | Array |
+| `entryMode` | Technology used to read the card | String ([Entry Mode](#supported-technologies)) |
+| `isoTrack1` | ISO track 1 data | String |
+| `isoTrack2` | ISO track 2 data (PAN data always masked) | String |
+| `isoTrack3` | ISO track 3 data | String |
+| `token` | Token of the card PAN / UID for customer identification | String |
+| `pan` | PAN of the card (always masked) | String |
+| `mediaType` | Media type of NFC non-payment card (e.g., MIFARE Ultralight) | String |
+| `mediaUniqueIdentifier` | UID of NFC based non-payment card | String |
+| `waitForNextAction` | Whether payment solution keeps card in read mode | Boolean |
+| `nextActionWaitTime` | Time card is kept in read mode, in milliseconds | Integer |
+
+### ShopInfo
+
+| Field Name | Description | Type |
+|------------|-------------|------|
+| `name` | Name of the shop | String |
+| `address` | Address (street and number) | String |
+| `zipCode` | ZIP code | String |
+| `city` | City | String |
+| `country` | Country | String |
+| `logo` | Content provider URI of the logo | String |
+
+### Result
+
+| Result | Description |
+|--------|-------------|
+| `WPI_RESULT_SUCCESS` | Successful transaction |
+| `WPI_RESULT_FAILURE` | Failed transaction |
+
+### Error Conditions
+
+| Error Condition | Description |
+|-----------------|-------------|
+| `WPI_ERR_COND_NONE` | No error occurred |
+| `WPI_ERR_COND_SERVICE_NOT_SUPPORTED` | Requested service type not supported |
+| `WPI_ERR_COND_ABORTED` | Abort request was accepted and processed |
+| `WPI_ERR_COND_BUSY` | Payment Application is busy, try later |
+| `WPI_ERR_COND_CARD_READ_ERR` | Unable to read the card |
+| `WPI_ERR_COND_USER_CANCEL` | User aborted the transaction |
+| `WPI_ERR_COND_USER_TIMEOUT` | Timeout while waiting for user interaction |
+| `WPI_ERR_COND_HOST_REFUSAL` | Acquirer/Issuer refused the transaction |
+| `WPI_ERR_COND_NETWORK_ISSUE` | Network issue occurred |
+| `WPI_ERR_COND_TRANSACTION_TIMEOUT` | Timeout during transaction |
+| `WPI_ERR_COND_ENCRYPTION_ISSUE` | Encryption issue caused transaction abort |
+| `WPI_ERR_COND_INVALID_KEY` | Secure component missing required key |
+| `WPI_ERR_COND_INVALID_TRANSACTION_REQ` | Invalid transaction request |
+| `WPI_ERR_COND_INTERNAL` | Internal error within payment service |
+| `WPI_ERR_COND_INVALID_AMOUNT` | Invalid amount entered |
+| `WPI_ERR_COND_INVALID_CURRENCY` | Invalid currency for transaction |
+| `WPI_ERR_COND_APP_NOT_SUPPORTED` | No accepted applications on card |
+| `WPI_ERR_COND_MISSING_MANDATORY_PARAMETER` | Missing mandatory parameter |
+| `WPI_ERR_COND_GENERIC` | Generic unspecified error |
+| `WPI_ERR_COND_NOT_INITIALIZED` | Payment solution not configured |
+| `WPI_ERR_COND_WPI_VERSION_NOT_SUPPORTED` | Unsupported WPI version |
+| `WPI_ERR_COND_SESSION_ID_ALREADY_IN_USE` | Session ID already used |
+| `WPI_ERR_COND_INVALID_PASSWORD` | Incorrect password for protected transactions |
+| `WPI_ERR_COND_RECEIPT_DELEGATION_NOT_SUPPORTED` | Receipt delegation not supported |
+
+### Action Codes
+
+| Action Code | Description |
+|-------------|-------------|
+| `WPI_ACTION_CODE_NONE` | No additional action required |
+| `WPI_ACTION_CODE_ASK_LEGAL_IDENTIFICATION` | Ask cardholder for legal identification |
+| `WPI_ACTION_CODE_ASK_SIGNATURE` | Ask cardholder to sign the merchant receipt |
+
+### Supported Technologies
+
+| Entry Mode | Description |
+|------------|-------------|
+| `WPI_ENTRY_MODE_MAGSTRIPE` | Magnetic stripe support |
+| `WPI_ENTRY_MODE_CHIP` | EMV chip (ICC) support |
+| `WPI_ENTRY_MODE_NFC` | EMV NFC chip support |
+| `WPI_ENTRY_MODE_NFC_MIFARE` | NFC MIFARE support |
+| `WPI_ENTRY_MODE_QR_CODE` | Alternative payment method via QR Code |
+
+### Payment Information
+
+| Field Name | Description | Type |
+|------------|-------------|------|
+| `acquirerIdentifier` | Acquirer identifier for the given brand | String |
+| `merchantIdentifier` | Merchant identifier used by the acquirer | String |
+| `acquirerTerminalIdentifier` | Terminal identifier used by acquirer | String |
+| `brandIdentifier` | Brand specific identifier (AID) | String |
+| `brandName` | Brand name (e.g., Mastercard) | String |
+| `supportedServiceTypes` | Supported service types for the brand | Array |
+| `cancellableServiceTypes` | Service types that can be reversed | Array |
+| `numberOfCancellableTransactions` | Number of last transactions that can be reversed | Integer |
+| `supportedTechnologies` | Supported technologies for card reading | Array |
+| `supportsDCC` | Whether DCC is supported | Boolean |
+
+---
+
+## Financial Transactions
+
+Each financial transaction has a minimum set of fields that needs to be present per service type.
+
+### Standard Financial Response
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `result` | String | Mandatory |
+| `errorCondition` | String | Mandatory |
+| `remark` | String | Conditional - only for unsuccessful transactions |
+| `actionCode` | String | Conditional - only for unsuccessful transactions |
+| `timestamp` | String (ISO 8601) | Conditional - only for successful transactions |
+| `currency` | String | Conditional - only for successful transactions |
+| `authorizedAmount` | Integer | Conditional - only for successful transactions |
+| `customerLanguage` | String | Conditional - only when payment card was used |
+| `brandName` | String | Conditional - only when payment card was used |
+| `applicationIdentifier` | String | Conditional - only when payment card was used |
+| `applicationLabel` | String | Conditional - only when payment card was used |
+| `receipt` | Object | Conditional - always present for successful transactions |
+| `paymentSolutionReference` | String | Conditional - always present for successful transactions |
+| `productRecords` | Array | Conditional - if present in request |
+
+### Payment (WPI_SVC_PAYMENT)
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `currency` | String | Mandatory |
+| `requestedAmount` | Integer | Mandatory |
+| `reference` | String | Optional |
+| `productRecords` | Array | Optional - usually for energy solutions |
+
+### Cancellation
+
+The cancellation (reversal) can be executed for several service types. Use the correct cancellation service type based on the initial service type.
+
+**Service Types:** `WPI_SVC_CANCEL_PAYMENT`, `WPI_SVC_CANCEL_PRE_AUTHORIZATION`, `WPI_SVC_CANCEL_UPDATE_PRE_AUTHORIZATION`, `WPI_SVC_CANCEL_PAYMENT_COMPLETION`
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `paymentSolutionReference` | String | Mandatory |
+
+### Refund (WPI_SVC_REFUND)
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `currency` | String | Mandatory |
+| `requestedAmount` | Integer | Mandatory |
+| `reference` | String | Optional |
+
+### Pre-authorization (WPI_SVC_PRE_AUTHORIZATION)
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `currency` | String | Mandatory |
+| `requestedAmount` | Integer | Mandatory |
+| `reference` | String | Optional |
+
+### Update Pre-authorization (WPI_SVC_UPDATE_PRE_AUTHORIZATION)
+
+Used to increase the pre-authorization amount. The `requestedAmount` is just the increment amount, **not the total**.
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `currency` | String | Mandatory |
+| `requestedAmount` | Integer | Mandatory |
+| `paymentSolutionReference` | String | Mandatory |
+| `reference` | String | Optional |
+
+### Payment Completion (WPI_SVC_PAYMENT_COMPLETION)
+
+To complete a previous pre-authorization. The final amount should be equal to or less than the total pre-authorization amount.
+
+<Warning>
+Using a higher amount for completion may result in an unsuccessful transaction because the higher amount was not reserved.
+</Warning>
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `currency` | String | Mandatory |
+| `requestedAmount` | Integer | Mandatory |
+| `paymentSolutionReference` | String | Mandatory |
+| `reference` | String | Optional |
+
+### Deferred Payment
+
+Deferred payment for petrol transaction processing where the actual payment is delayed. Split into authorization and completion.
+
+<Tabs>
+  <Tab title="Authorization">
+    **Service Type:** `WPI_SVC_DEFERRED_PAYMENT_AUTHORIZATION`
+
+    | Field Name | Type | Condition |
+    |------------|------|-----------|
+    | `currency` | String | Mandatory |
+    | `requestedAmount` | Integer | Mandatory |
+    | `reference` | String | Optional |
+  </Tab>
+  <Tab title="Completion">
+    **Service Type:** `WPI_SVC_DEFERRED_PAYMENT_COMPLETION`
+
+    | Field Name | Type | Condition |
+    |------------|------|-----------|
+    | `currency` | String | Mandatory |
+    | `requestedAmount` | Integer | Mandatory |
+    | `paymentSolutionReference` | String | Mandatory |
+    | `reference` | String | Optional |
+    | `productRecords` | Array | Optional |
+  </Tab>
+</Tabs>
 
 <Note>
-For the complete data dictionary and all available fields, refer to the official WPI specification document available through your Partner account.
+PSD2 imposes the amount to be present in the request. The "Multi-Session" concept is usually configured for performing "Parallel Transactions" to increase terminal availability.
 </Note>
+
+### Payment Instrument Recognition (WPI_SVC_PAYMENT_INSTRUMENT_RECOGNITION)
+
+Used to avoid double tap for contactless entry mode. Two possibilities: token retrieval only, or card recognition with further payment processing.
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `currency` | String | Optional - if transaction processing should happen afterwards |
+| `requestedAmount` | Integer | Optional - if transaction processing should happen afterwards |
+| `serviceType` | String | Optional - if transaction processing should happen afterwards |
+| `recognitionTimeout` | Integer | Mandatory |
+| `recognitionOptions` | Array | Mandatory |
+
+**Response:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `result` | String | Mandatory |
+| `errorCondition` | String | Mandatory |
+| `entryMode` | String | Mandatory on success |
+| `customerLanguage` | String | Mandatory on success |
+| `isoTrack1` | String | Conditional - magnetic stripe card |
+| `isoTrack2` | String | Conditional - magnetic stripe card |
+| `isoTrack3` | String | Conditional - magnetic stripe card |
+| `token` | String | Mandatory for payment card processing |
+| `pan` | String | Mandatory for payment card processing |
+| `mediaType` | String | Mandatory for non-payment card processing |
+| `mediaUniqueIdentifier` | String | Mandatory for non-payment card processing |
+| `waitForNextAction` | Boolean | Mandatory on success |
+| `nextActionWaitTime` | Integer | Mandatory on success |
+
+### Follow on Credit (WPI_SVC_FOLLOW_ON_CREDIT)
+
+Card-not-present transaction using card data from a previous transaction.
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `currency` | String | Mandatory |
+| `requestedAmount` | Integer | Mandatory |
+| `reference` | String | Optional |
+| `paymentSolutionReference` | String | Mandatory |
+
+---
+
+## Management Actions
+
+Management actions have an empty request JSON content, except for services that contain a receipt.
+
+### Standard Management Response
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `result` | String | Mandatory |
+| `errorCondition` | String | Mandatory |
+| `receipt` | Object | Conditional - only for services with receipts |
+
+### Payment Menu (WPI_SVC_PAYMENT_MENU)
+
+Opens the payment solution menu to trigger payment solution specific actions.
+
+### Day-End (WPI_SVC_DAY_END)
+
+Uploads offline transactions to the host and returns a receipt with transaction summary per brand.
+
+### Payment Parameterization (WPI_SVC_PAYMENT_PARAMETERIZATION)
+
+Synchronizes payment solution specific parameters with the corresponding management system.
+
+### Acquirer Parameterization (WPI_SVC_ACQUIRER_PARAMETERIZATION)
+
+Synchronizes with the acquirer system. Multi-Acquirer solutions do parameterization for all acquirers.
+
+### Print Receipt (WPI_SVC_PRINT_RECEIPT)
+
+Provides a compliant receipt by the payment solution.
+
+**Requirements:**
+- A previous transaction was done with a corresponding session ID
+- The `SESSION_ID` must be the previous request's session ID, **not** a new one
+- The payment solution supports receipt delivery
+- Referenced request has a receipt available
+
+**Request:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `receiptTarget` | String | Mandatory |
+
+**Response:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `result` | String | Mandatory |
+| `errorCondition` | String | Mandatory |
+| `remark` | String | Conditional - on error |
+
+<Warning>
+Be aware any payment solution will just store the last `SESSION_ID` and response per application (package name). No other WPI requests shall be done before printing the receipt.
+</Warning>
+
+### Abort (WPI_SVC_ABORT)
+
+Aborts the current ongoing financial transaction. Returns `WPI_RESULT_SUCCESS` if successfully aborted or no transaction was running.
+
+---
+
+## Information Services
+
+Retrieval of Payment Solution specific information that does not require user interaction.
+
+### Last Transaction (WPI_SVC_LAST_TRANSACTION)
+
+Recovery feature to request the last financial transaction response.
+
+**Request:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WPI_SERVICE_TYPE` | Subtype of action to be executed | String | Mandatory |
+| `WPI_VERSION` | Used WPI version | String | Mandatory |
+| `WPI_SESSION_ID` | Session ID of the requested session, **not** a new session ID | String | Mandatory |
+
+**Response:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WPI_SERVICE_TYPE` | Service type of the recovered transaction | String | Session known and executed |
+| `WPI_RESPONSE` | Financial Payment Response object | String | Session known and executed |
+| `WPI_VERSION` | Used WPI version | String | Mandatory |
+| `WPI_SESSION_ID` | Identifier of a WPI exchange | String | Mandatory |
+
+### Payment Solution Information (WPI_SVC_PAYMENT_INFORMATION)
+
+Returns all required payment solution information. Returns `WPI_ERR_COND_NOT_INITIALIZED` if not properly configured.
+
+**Response:**
+
+| Field Name | Type | Condition |
+|------------|------|-----------|
+| `result` | String | Mandatory |
+| `errorCondition` | String | Mandatory |
+| `softwareVersion` | String | On success |
+| `terminalIdentifier` | String | On success |
+| `terminalModel` | String | On success |
+| `macAddress` | String | On success |
+| `supportedLanguages` | Array | On success |
+| `cardholderDefaultLanguage` | String | On success |
+| `merchantLanguage` | String | On success |
+| `countryCode` | String | On success |
+| `defaultCurrency` | String | On success |
+| `supportedCurrencies` | Array | On success |
+| `shopInfo` | Object | On success |
+| `acquirerProtocol` | String | On success |
+| `supportedTicketFormats` | Array | On success |
+| `supportsReceiptDelegation` | Boolean | On success |
+| `paymentInformation` | Array | On success |
+| `paymentSolutionSupportedServiceTypes` | Array | On success |
+
+---
+
+## Receipts
+
+### Receipt Object Structure
+
+<Tabs>
+  <Tab title="Formatted">
+    Merchant and cardholder receipts as preformatted text. Width defined by payment application (often 32 characters).
+
+    ```json
+    {
+      "formatted": {
+        "merchant": "    This is to confirm your transaction\\n...",
+        "client": "    This is to confirm your transaction\\n..."
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="JSON">
+    Structured JSON format for creating custom receipt formats.
+
+    ```json
+    {
+      "json": {
+        "receiptTargets": {
+          "merchant": ["field1", "field2"],
+          "client": ["field1", "field2"]
+        },
+        "duplicate": false,
+        "shopInfo": {
+          "name": "Shop Name",
+          "address": "Street 123",
+          "zipCode": "12345",
+          "city": "City",
+          "country": "Country"
+        },
+        "terminalIdentifier": "TID123",
+        "currency": "EUR",
+        "amount": 1000,
+        "brandName": "VISA",
+        "pan": "****1234",
+        "timestamp": "2023-02-15T22:36:00+01:00",
+        "authorizationCode": "741451"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+Custom receipt formats should be compliant with local, payment solution, and EMV specifications.
+</Note>
+

@@ -1,0 +1,236 @@
+---
+title: "Create First Application with WPI"
+description: "Step-by-step guide to building your first WPI payment application"
+---
+
+# WPI V2.X Financial Codelab
+
+<Info>
+**Estimated time:** 31 minutes
+</Info>
+
+## Overview
+
+The Worldline Payment Interface (WPI) is an Android intent-based interface that enables easy and fast integration with payment apps. It is designed to allow additional business applications to execute payments on any Worldline offered SmartPOS device.
+
+A SmartPOS device is a payment device that runs Android, and also smartphones using Tap On Mobile.
+
+All Worldline Payment Solutions support WPI, which means that business applications that use this interface can run everywhere without any change of code. This makes it easy for developers to build payment apps that are compatible with a wide range of payment devices and payment protocols.
+
+The WPI interface is built on top of the Android Intent mechanism, which allows different parts of an app to communicate with each other in a structured way.
+
+### What You'll Learn
+
+- Send a request using the WPI V2.X interface
+- Handle the response
+- Create a simple business app that launches payment
+
+## Getting Set Up
+
+### Get the Code
+
+Download all the code for this codelab:
+
+<Card title="Download Sample Code" icon="download" href="/assets/smartpos/wpi-codelabs/wpi-financial.zip">
+  WPI Financial Codelab Sample Code (ZIP)
+</Card>
+
+### Check Out the Sample App
+
+<Warning>
+For this codelab we will use Android Studio Narwhal Feature Drop, SDK 36 and Gradle 8.14.3. Please verify that you have a payment application running on your device.
+</Warning>
+
+The project is built with two app folders:
+
+- **start** – the starter code for this project; you will make changes to this to complete the codelab
+- **finished_code** – contains the solution to this codelab
+
+We recommend that you start with the code in the **start** folder and follow the codelab step-by-step at your own pace.
+
+## Interface Structure
+
+The WPI provides a set of intents that developers can use to build apps that work with the interface:
+
+| Type | Display Action / Background Action | Intent | Purpose |
+|------|-----------------------------------|--------|---------|
+| Financial | Display Action | `com.worldline.payment.action.PROCESS_TRANSACTION` | Process a financial transaction |
+| Management | Display Action | `com.worldline.payment.action.PROCESS_MANAGEMENT` | Trigger payment solution managed actions |
+| Information | Background Action | `com.worldline.payment.action.PROCESS_INFORMATION` | Background management of payment solution info |
+
+### Request Extras
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WPI_SERVICE_TYPE` | Specify the subtype of action to be executed | String | Mandatory |
+| `WPI_REQUEST` | JSON structured data for the service type | String | Mandatory for Financial |
+| `WPI_VERSION` | Used WPI version | String | Mandatory |
+| `WPI_SESSION_ID` | Identifier of a WPI exchange - must be unique | String | Mandatory |
+
+### Response Extras
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WPI_SERVICE_TYPE` | Subtype of action that was executed | String | Mandatory |
+| `WPI_RESPONSE` | JSON structured response data | String | Mandatory |
+| `WPI_VERSION` | Used WPI version | String | Mandatory |
+| `WPI_SESSION_ID` | Identifier provided by the client | String | Mandatory |
+
+### Financial Service Types
+
+| Service Type | Purpose |
+|--------------|---------|
+| `WPI_SVC_PAYMENT` | Perform a simple sale transaction (purchase) |
+| `WPI_SVC_CANCEL_PAYMENT` | Reverse a previous transaction |
+| `WPI_SVC_REFUND` | Refund a previous transaction |
+| `WPI_SVC_PRE_AUTHORIZATION` | Perform a reservation |
+| `WPI_SVC_CANCEL_PRE_AUTHORIZATION` | Cancel a previous reservation |
+| `WPI_SVC_UPDATE_PRE_AUTHORIZATION` | Increment a previous reservation |
+| `WPI_SVC_PAYMENT_COMPLETION` | Purchase a reservation |
+| `WPI_SVC_DEFERRED_PAYMENT_AUTHORIZATION` | Deferred payment authorization (energy use-case) |
+| `WPI_SVC_PAYMENT_INSTRUMENT_RECOGNITION` | Card recognition without performing a transaction |
+
+## AndroidManifest: Declaring Intent Queries (API 30+)
+
+<Warning>
+If your app targets Android 11 (API level 30) or higher, you must declare the external intents your app queries in your `AndroidManifest.xml` using the `queries` element.
+</Warning>
+
+Add the following to your `AndroidManifest.xml` (outside the `<application>` tag):
+
+```xml
+<queries>
+    <intent>
+        <action android:name="com.worldline.payment.action.PROCESS_INFORMATION" />
+    </intent>
+    <intent>
+        <action android:name="com.worldline.payment.action.PROCESS_TRANSACTION" />
+    </intent>
+    <intent>
+        <action android:name="com.worldline.payment.action.PROCESS_MANAGEMENT" />
+    </intent>
+</queries>
+```
+
+## SaleTransactionRequest and SaleTransactionResponse
+
+### Creation of the Request
+
+Create a new data class `SaleTransactionRequest` in the package `com.worldline.wpi_codelab.model.request`:
+
+```kotlin
+@Serializable
+public data class SaleTransactionRequest(
+    val currency: String,
+    val requestedAmount: Long,
+)
+```
+
+Add the serialization dependency to your `build.gradle.kts`:
+
+```kotlin
+plugins {
+    id("kotlinx-serialization")
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+}
+```
+
+### Creation of the Response
+
+Create a data class `SaleTransactionResponse` in `com.worldline.wpi_codelab.model.response`:
+
+```kotlin
+@Serializable
+data class SaleTransactionResponse(
+    val result: String?,
+    val authorizedAmount: Long? = null,
+    val currency: String? = null,
+)
+```
+
+## Declare the Intent and Handle the Response
+
+### Execute Sale Transaction
+
+```kotlin
+private fun executeSaleTransaction(amount: Long) {
+    val saleTransaction = SaleTransactionRequest("eur", amount)
+    val saleTransactionJson: String = Json.encodeToString(saleTransaction)
+
+    val intent = Intent("com.worldline.payment.action.PROCESS_TRANSACTION")
+    intent.putExtra("WPI_SERVICE_TYPE", "WPI_SVC_PAYMENT")
+    intent.putExtra("WPI_REQUEST", saleTransactionJson)
+    intent.putExtra("WPI_VERSION", "2.1")
+    intent.putExtra("WPI_SESSION_ID", UUID.randomUUID().toString())
+
+    launcher.launch(intent)
+}
+```
+
+### Handle Transaction Response
+
+```kotlin
+private val json = Json { ignoreUnknownKeys = true }
+
+private fun handleTransactionResponse(intent: Intent) {
+    val rawJsonResponse = intent.getStringExtra("WPI_RESPONSE")
+    if (rawJsonResponse != null) {
+        Log.d("Transaction response", rawJsonResponse)
+        val transactionResponse = json.decodeFromString<SaleTransactionResponse>(rawJsonResponse)
+        val paymentMessage = "${transactionResponse.result}: ${(transactionResponse.authorizedAmount?.toDouble()?.div(100))} ${transactionResponse.currency}"
+        Toast.makeText(this, paymentMessage, Toast.LENGTH_SHORT).show()
+    }
+}
+```
+
+### Activity Result Launcher
+
+```kotlin
+private val launcher = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+) { result ->
+    result.data?.let { handleTransactionResponse(it) }
+}
+```
+
+## Proceed to Your First Payment
+
+Add the `executeSaleTransaction` function to the `onCreate` of your Activity:
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent {
+        SaleTransactionScreen { amount ->
+            executeSaleTransaction(amount)
+        }
+    }
+}
+```
+
+You can now run the app on a terminal and proceed to your first payment!
+
+## Congratulations!
+
+You've successfully completed this codelab and learned how to proceed to a payment with the WPI!
+
+<Check>
+**What you learned:**
+- How to create a WPI request
+- How to create a response handler
+- How to use the Worldline Payment Interface for payments
+</Check>
+
+### Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Retrieve Payment Information" icon="circle-info" href="/smartpos/wpi/codelabs/retrieve-payment-info">
+    Learn how to query payment solution information
+  </Card>
+  <Card title="WPI 2.1 Specification" icon="book" href="/smartpos/wpi/wpi-version-2-1">
+    Complete API reference
+  </Card>
+</CardGroup>
