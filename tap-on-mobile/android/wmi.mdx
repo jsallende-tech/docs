@@ -1,22 +1,503 @@
 ---
 title: "WMI"
-description: "Worldline Mobile Interface for Android"
+description: "Worldline Management Interface for Android - Terminal Registration and Management"
 ---
 
-# Worldline Mobile Interface (WMI)
+# Worldline Management Interface
 
-WMI provides an alternative integration approach for Tap on Mobile on Android devices.
+Version 1.0.3
 
-## Overview
+## Table of Contents
 
-WMI is designed specifically for mobile payment acceptance scenarios with optimized APIs for smartphone integration.
+1. [Introduction](#1-introduction)
+   - [Supplementary Documentation](#11-supplementary-documentation)
+   - [Acronyms](#12-acronyms)
+   - [Tap on Mobile Operation Modes](#13-tap-on-mobile-operation-modes)
+   - [Supported Processes](#14-supported-processes)
+   - [Interface Limitations](#15-interface-limitations)
+2. [Android Communication Layer](#2-android-communication-layer)
+   - [Android Inter App Communication](#21-android-inter-app-communication)
+3. [Integrated Authentication Functions](#3-integrated-authentication-functions)
+   - [Check Application Status](#31-check-application-status)
+   - [Register Terminal](#32-register-terminal)
+   - [Unregister Terminal](#33-unregister-terminal)
+   - [Application Statuses](#34-application-statuses)
+   - [Result](#35-result)
+   - [Service Types](#36-service-types)
+4. [Tap on Mobile Backend API](#4-tap-on-mobile-backend-api)
+   - [OAuth2 Authentication](#41-oauth2-authentication)
+   - [Retrieving and Managing Terminal Structure](#42-retrieving-and-managing-terminal-structure)
+   - [Locking a Terminal for Registration](#43-locking-a-terminal-for-registration)
 
-## Features
+## 1. Introduction
 
-- Mobile-optimized APIs
-- Simplified integration flow
-- Full contactless payment support
+This page is intended for third-party application providers who wish to develop business applications interacting with Worldline Tap on Mobile application and explicitly covers the supplementary management processes which currently are built around the integrated registration functions. All payment context use cases and operations are defined by Worldline Payment Interface (WPI). All source code examples used in this document are written in Kotlin (Android).
+
+### 1.1 Supplementary Documentation
+
+| Reference | Specification Description |
+|-----------|--------------------------|
+| WPI | [Worldline Payment Interface Specification for Tap on Mobile](/tap-on-mobile/android/wpi-2-2) |
+| ToM API | [Tap on Mobile backend API specification](https://sandbox-wl-emea.softpos.eu/swagger-ui/index.html) |
+
+### 1.2 Acronyms
+
+| Acronym | Meaning |
+|---------|---------|
+| MID | Merchant ID |
+| TID | Terminal ID |
+| WMI | Worldline Management Interface |
+| ToM | Worldline Tap on Mobile |
+| WPI | Worldline Payment Interface |
+
+### 1.3 Tap on Mobile Operation Modes
+
+Due to regulatory constraints Tap on Mobile application uses a single and common distribution channel - Google Play Store. It means that all offered operation modes must be consistently supported in the same product. Hence, it is important to understand the dependencies between relevant operation modes, i.e. standalone and integrated authentication.
+
+#### 1.3.1 Standalone Operation Mode
+
+Standalone operation mode represents all use cases in which the application has been manually enrolled by the user by the means of built-in UI registration options. This mode requires to establish a 4-digit application access code which entry is then required for any authentication operations. If supported by the current product configuration, access code may be replaced by the device biometry options.
+
+Using standalone operation mode supports WPI methods. All WPI function calls to unauthenticated ToM application will trigger a login screen (4-digit access code or biometry means required).
 
 <Note>
-Contact your Worldline Partner Manager for WMI documentation and access.
+In future releases, ToM application logic for standalone mode operation will introduce a rule that will disable the manual application usage after the 1st processed WPI call.
 </Note>
+
+#### 1.3.2 Integrated Operation Mode
+
+Integrated operation mode represents all use cases in which the application is enrolled using WMI. WPI functions are also supported for terminals using this mode, however there are several rules which are crucial for proper integrated mode usage:
+
+<Warning>
+**Important Rules for Integrated Mode:**
+
+1. ToM application registered in integrated mode cannot be accessed from the application GUI (except login screen upon manual application launch)
+2. After registering, ToM application is responsible for its own authentication and session validity
+3. During the registration process, ToM application checks the registering 3rd party application package name and bounds to it
+4. While ToM application is exclusively bound to a 3rd party application package name, all WPI and selected WMI requests incoming from other application packages will be rejected with a dedicated errorCondition code
+</Warning>
+
+<Note>
+The `WMI_SVC_REGISTER` service is exempted from rule 4 to allow automated re-bounding of ToM application to another 3rd party application package name running in the same device.
+</Note>
+
+To allow assessing which action is required, WMI offers a dedicated function to retrieve the current ToM application status. It **is strongly recommended** to retrieve this information outside of payment acceptance context.
+
+#### 1.3.3 Operation Modes Summary
+
+| Feature | Standalone Mode (Manual Registration) | Integrated Mode (WMI Registration) |
+|---------|--------------------------------------|-----------------------------------|
+| Manual desktop app launch | ToM login screen (unauthenticated) or home screen (authenticated) | ToM login screen |
+| WPI functions | Supported (for whitelisted package names) | Supported only for the 3rd party app package that registered ToM |
+| ToM app login upon WPI calls | Seamless with 4-digit code, or manual entry per config | Not applicable; handled internally by ToM app |
+| Unregistration | Unsubscribe from login screen, settings, or merchant portal | WMI_SVC_AUTH_UNREGISTER, WMI_SVC_REGISTER, login screen, or merchant portal |
+
+### 1.4 Supported Processes
+
+Current interface design addresses three processes that are relevant for 3rd party application developers.
+
+#### 1.4.1 Checking ToM Status Outside WPI Context
+
+This process explains actors and operations sequence for assessing the current ToM application status:
+
+<Steps>
+  <Step title="3rd Party App">
+    Calls WMI_SVC_CHECK_STATUS
+  </Step>
+  <Step title="ToM Application">
+    Processes the request
+  </Step>
+  <Step title="Response">
+    Returns current appStatus (INITIALIZED, REGISTERED, ACTIVE, etc.)
+  </Step>
+</Steps>
+
+#### 1.4.2 ToM Already Registered with Other Application
+
+When ToM is already registered with another 3rd party application:
+
+- WPI and WMI requests from unregistered packages are rejected
+- Error condition `WMI_ERR_COND_TERMINAL_BUSY` is returned
+- Only `WMI_SVC_REGISTER` can override the existing registration
+
+#### 1.4.3 Integrated ToM Registration Process
+
+<Steps>
+  <Step title="Backend Integration">
+    3rd party backend authenticates with ToM backend API using OAuth2
+  </Step>
+  <Step title="Terminal Selection">
+    Backend retrieves merchant terminal structure and selects a TID
+  </Step>
+  <Step title="Token Generation">
+    Backend requests a registration token for the selected terminal
+  </Step>
+  <Step title="Mobile Registration">
+    3rd party app calls WMI_SVC_REGISTER with the registration token
+  </Step>
+  <Step title="Completion">
+    ToM processes registration and returns success/failure
+  </Step>
+</Steps>
+
+#### 1.4.4 Integrated ToM Deregistration Process
+
+<Steps>
+  <Step title="Check Status">
+    Verify terminal is registered with current app
+  </Step>
+  <Step title="Call Unregister">
+    Send WMI_SVC_AUTH_UNREGISTER request
+  </Step>
+  <Step title="Completion">
+    Terminal is unregistered and available for new registration
+  </Step>
+</Steps>
+
+### 1.5 Interface Limitations
+
+| ID | Area | Limitation Description |
+|----|------|----------------------|
+| 1 | Manual ToM App Launch | ToM application may still be launched from device desktop. A standard standalone login screen will be displayed, without specific user explanation. Future: implement dedicated activity or reverse intent interface. |
+| 2 | Registration Token QR Code | It is possible to launch WMI_SVC_REGISTER without providing a registration token. ToM will launch QR code scanner without preparatory screen. **It is strongly recommended** not to consider QR-code based implementations until explicitly covered by documentation. |
+
+## 2. Android Communication Layer
+
+### 2.1 Android Inter App Communication
+
+Tap on Mobile Management Interface uses Intents in Android for communication between components. Intent usage can be categorized into:
+
+1. **Explicit Intents**: Launch specific components within the same app
+2. **Implicit Intents**: Declare general actions, let Android resolve the target. **WMI is the implementation of this type of intent.**
+
+Intents carry data as key-value pairs (Extras) to pass data between components.
+
+#### 2.1.1 Interface Structure
+
+WMI provides a single intent type. All operations fall into the Display Action category (require starting the payment solution but don't require user interaction):
+
+| Type | Category | Intent | Purpose |
+|------|----------|--------|---------|
+| Configuration | Display Action | `com.worldline.management.action.PROCESS_OPERATION` | Process a solution management operation |
+
+#### 2.1.2 Android Intent Implementation
+
+```kotlin
+val intent = Intent("com.worldline.management.action.PROCESS_OPERATION").apply {
+    flags += Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+}
+```
+
+**Request Extras:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WMI_SERVICE_TYPE` | Specify the subtype of action to be executed | String | Mandatory |
+| `WMI_REQUEST` | JSON structured data for given service type | String | Conditional |
+| `SHOW_OVERLAY` | Whether to show semi-transparent overlay with loader while processing | Boolean | Conditional (true by default) |
+
+**Complete Implementation Example:**
+
+```kotlin
+/**
+ * Example code snippet on how to send a WMI request and handle the response.
+ */
+class LoginActivity : AppCompatActivity() {
+
+    private val launcher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        result.data?.let { handleWMIResponse(it) }
+    }
+
+    private fun startWMIOperation(wmiRequestJson: String, serviceType: String) {
+        val intent = Intent("com.worldline.management.action.PROCESS_OPERATION").apply {
+            putExtra("WMI_SERVICE_TYPE", serviceType)
+            putExtra("WMI_REQUEST", wmiRequestJson)
+            putExtra("SHOW_OVERLAY", false) // when we don't want the overlay
+        }
+        launcher.launch(intent)
+    }
+
+    private fun handleWMIResponse(intent: Intent) {
+        val rawJsonResponse = intent.getStringExtra("WMI_RESPONSE")
+        // Handle response
+    }
+}
+```
+
+## 3. Integrated Authentication Functions
+
+This chapter describes the data exchange format. WMI uses JSON as data exchange.
+
+### 3.1 Check Application Status
+
+This function determines the current Tap on Mobile application status and assesses whether it is properly authenticated and ready to perform payment acceptance functions.
+
+**Request:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WMI_SERVICE_TYPE` | `WMI_SVC_CHECK_STATUS` | String | Mandatory |
+
+**Response:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WMI_SERVICE_TYPE` | `WMI_SVC_CHECK_STATUS` | String | Mandatory |
+| `WMI_RESPONSE` | JSON structured response parameters | String | Mandatory |
+
+**WMI_RESPONSE Parameters:**
+
+| Field Name | Description | Type | Condition |
+|------------|-------------|------|-----------|
+| `result` | Result (success or failure) | String | Mandatory |
+| `errorCondition` | Specific error reason | String | Mandatory |
+| `remark` | Detailed error description (English) | String | Optional |
+| `appStatus` | ToM application status indicating registration state | String | Mandatory |
+
+**Error Conditions:**
+
+| Error Condition | Description |
+|-----------------|-------------|
+| `WMI_ERR_COND_NONE` | No error occurred, confirms successful result |
+| `WMI_ERR_COND_SERVICE_NOT_SUPPORTED` | Requested service type is not supported |
+| `WMI_ERR_COND_INVALID_JSON` | Incorrect request structure or contents, parsing error |
+| `WMI_ERR_COND_GENERIC` | Mobile application generic error |
+| `WMI_ERR_COND_INTERNAL` | Backend-driven generic error |
+| `WMI_ERR_COND_TERMINAL_BUSY` | Terminal communication is exclusively restricted to another 3rd party application package |
+
+### 3.2 Register Terminal
+
+This function initiates terminal enrollment using an optional registration token.
+
+**Request:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WMI_SERVICE_TYPE` | `WMI_SVC_REGISTER` | String | Mandatory |
+
+**WMI_REQUEST Parameters:**
+
+| Field Name | Description | Type | Condition |
+|------------|-------------|------|-----------|
+| `registrationToken` | TID specific registration token retrieved from ToM backend. If not present, ToM will collect permissions and launch QR-code reader | String | Optional |
+
+**Response:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WMI_SERVICE_TYPE` | `WMI_SVC_REGISTER` | String | Mandatory |
+| `WMI_RESPONSE` | JSON structured response parameters | String | Mandatory |
+
+**WMI_RESPONSE Parameters:**
+
+| Field Name | Description | Type | Condition |
+|------------|-------------|------|-----------|
+| `result` | Result (success or failure) | String | Mandatory |
+| `errorCondition` | Specific error reason | String | Mandatory |
+| `remark` | Detailed error description (English) | String | Optional |
+
+**Error Conditions:**
+
+| Error Condition | Description |
+|-----------------|-------------|
+| `WMI_ERR_COND_NONE` | No error occurred |
+| `WMI_ERR_COND_SERVICE_NOT_SUPPORTED` | Requested service type is not supported |
+| `WMI_ERR_COND_INVALID_JSON` | Incorrect request structure or contents |
+| `WMI_ERR_COND_AUTH_NOT_POSSIBLE` | Registration not possible (e.g., invalid registration token) |
+| `WMI_ERR_COND_GENERIC` | Mobile application generic error |
+| `WMI_ERR_COND_INTERNAL` | Backend-driven generic error |
+| `WMI_ERR_COND_TERMINAL_BUSY` | Terminal restricted to another application package |
+
+### 3.3 Unregister Terminal
+
+This function unregisters the currently assigned TID from the mobile application instance. Only use with already registered terminal.
+
+**Request:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WMI_SERVICE_TYPE` | `WMI_SVC_AUTH_UNREGISTER` | String | Mandatory |
+
+**Response:**
+
+| Extra | Description | Type | Condition |
+|-------|-------------|------|-----------|
+| `WMI_SERVICE_TYPE` | `WMI_SVC_AUTH_UNREGISTER` | String | Mandatory |
+| `WMI_RESPONSE` | JSON structured response parameters | String | Mandatory |
+
+**WMI_RESPONSE Parameters:**
+
+| Field Name | Description | Type | Condition |
+|------------|-------------|------|-----------|
+| `result` | Result (success or failure) | String | Mandatory |
+| `errorCondition` | Specific error reason | String | Mandatory |
+| `remark` | Detailed error description (English) | String | Optional |
+
+**Error Conditions:**
+
+| Error Condition | Description |
+|-----------------|-------------|
+| `WMI_ERR_COND_NONE` | No error occurred |
+| `WMI_ERR_COND_SERVICE_NOT_SUPPORTED` | Requested service type is not supported |
+| `WMI_ERR_COND_AUTH_NOT_POSSIBLE` | Valid terminal registration was not found |
+| `WMI_ERR_COND_GENERIC` | Mobile application generic error |
+| `WMI_ERR_COND_INTERNAL` | Backend-driven generic error |
+| `WMI_ERR_COND_TERMINAL_BUSY` | Terminal restricted to another application package |
+
+### 3.4 Application Statuses
+
+| Status | Description |
+|--------|-------------|
+| `NEW` | Technical status - registration process may be performed; ToM not registered |
+| `INITIALIZED` | Registration process may be performed; ToM not registered |
+| `REGISTERED` | ToM is registered but not yet authenticated - WPI functions may be performed |
+| `AUTHENTICATED` | Technical status - ToM still performs configuration activities |
+| `ACTIVE` | ToM is authenticated and ready for payment acceptance (WPI) |
+| `ERROR` | ToM application crash |
+
+### 3.5 Result
+
+| Result | Description |
+|--------|-------------|
+| `WMI_RESULT_SUCCESS` | Successful operation |
+| `WMI_RESULT_FAILURE` | Failed operation |
+
+### 3.6 Service Types
+
+| Service Type | Description |
+|--------------|-------------|
+| `WMI_SVC_CHECK_STATUS` | Check current ToM application status |
+| `WMI_SVC_REGISTER` | Initiate terminal enrollment sequence |
+| `WMI_SVC_AUTH_UNREGISTER` | Unregister terminal by the 3rd party application |
+
+## 4. Tap on Mobile Backend API
+
+Implementing Tap on Mobile integrated authentication mode requires integrating 3rd party application backend directly to ToM backend API.
+
+<Warning>
+Storing OAuth2 access credentials directly in the mobile application is **not allowed**.
+</Warning>
+
+This integration process requires covering the following areas:
+
+1. ToM backend API OAuth2 authentication
+2. Logic to retrieve and manage merchant terminals structure
+3. Logic to lock free terminal selected for registration
+
+### 4.1 OAuth2 Authentication
+
+The OAuth2 token endpoint provides access tokens used to authenticate and authorize requests to protected resources.
+
+#### 4.1.1 Request Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `grant_type` | Grant type: `client_credentials` |
+| `scope` | Scope of the access token |
+| `client_id` | Unique identifier for the client application |
+| `client_secret` | Secret string to authenticate the client application |
+
+#### 4.1.2 Response Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `access_token` | Access token for terminal authentication endpoint |
+| `scope` | Scope of the access token |
+| `token_type` | Type of access token (e.g., "Bearer") |
+| `expires_in` | Seconds before the access token expires |
+
+### 4.2 Retrieving and Managing Terminal Structure
+
+Merchant applications access to ToM backend API should reflect the complete merchant organization structure:
+
+```
+CONTRACT_ID (optional)
+  └── VAT_ID#1 (optional)
+        ├── MID#11
+        ├── MID#12
+        └── MID#1n
+  └── VAT_ID#2
+        └── MID#21
+```
+
+- **CONTRACT_ID**: Optional, used when lower-level tiers require aggregation
+- **VAT_ID**: Optional, used when lower-level tier requires aggregation
+- **MID**: Lowest and most common tier; TIDs are allocated at MID level
+
+The suggested function for retrieving current merchant terminal structure is `POST /api/v1/terminals/search`.
+
+#### 4.2.1 Request Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `page` | Zero-based page index (default: 0) |
+| `size` | Number of items per page (default: 10) |
+| `sort` | Sorting criteria: `property,(asc|desc)` |
+
+**Request Body Filters:**
+
+| Field | Description |
+|-------|-------------|
+| `contract_id` | Merchant tier level identifier |
+| `vat_id` | Merchant tier level identifier |
+| `mid` | Merchant tier level identifier |
+| `tid` | Terminal identifier |
+| `connected` | `true` = TID linked to device; `false` = available for registration |
+| `disabled` | Flag for temporarily restricted terminals |
+
+#### 4.2.2 Response Parameters
+
+| Field | Description |
+|-------|-------------|
+| `id` | Terminal UUID stored in ToM backend |
+| `external_id` | 3rd party terminal identifier (if assigned) |
+| `tid` | Active TID for assignment |
+| `mid` | MID corresponding to the TID |
+
+### 4.3 Locking a Terminal for Registration
+
+After selecting a TID, generate a registration token using `POST /api/v1/terminals/{id}/registrationtoken`, where `id` is the terminal UUID.
+
+<Note>
+Creating a registration token moves the TID to 'locked' status. The TID cannot be manually registered in standalone mode throughout the token validity.
+</Note>
+
+**To extend token validity:** Call `POST /api/v1/terminals/{id}/registration-token/refresh`. This maintains the previous token value and returns a new validity timestamp.
+
+#### 4.3.1 Request Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `id` | Terminal UUID stored in ToM backend |
+
+**Request Body:**
+
+| Field | Description |
+|-------|-------------|
+| `email` | Optional. Email address for welcome email with registration token QR-code. Use empty body structure if not using end user notification. |
+
+#### 4.3.2 Response Parameters
+
+| Field | Description |
+|-------|-------------|
+| `token` | Generated registration token to use with WMI_SVC_REGISTER |
+| `expiresAt` | Token expiration timestamp |
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="WPI 2.2 Documentation" icon="code" href="/tap-on-mobile/android/wpi-2-2">
+    Worldline Payment Interface for transactions
+  </Card>
+  <Card title="ToM Backend API" icon="server" href="https://sandbox-wl-emea.softpos.eu/swagger-ui/index.html">
+    Full API specification
+  </Card>
+  <Card title="Terminal Registration" icon="mobile" href="/tap-on-mobile/resources/terminal-registration">
+    Terminal registration guide
+  </Card>
+  <Card title="Test Cards" icon="credit-card" href="/tap-on-mobile/resources/test-cards">
+    Test cards for sandbox testing
+  </Card>
+</CardGroup>

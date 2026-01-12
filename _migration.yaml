@@ -301,27 +301,27 @@ sections:
         notes: ""
 
     android_integration:
-      - source: "Tap-on-Mobile_Partner-Center_Android-Integration_wpi-2-2 reference"
+      - source: "https://docs.smartpos.worldline-solutions.com/Tap-on-Mobile/Partner-Center/Android-Integration/wpi-2-2"
         target: "tap-on-mobile/android/wpi-2-2.mdx"
-        status: "partial"
-        completeness: 40
+        status: "cross_checked"
+        completeness: 100
         priority: "high"
-        notes: "WPI 2.2 for Tap on Mobile. Needs full specification content."
+        notes: "CROSS-CHECKED. Complete WPI 2.2.2 specification fetched from origin. Includes all transaction types, data dictionary, error conditions, and code examples."
 
-      - source: "Tap-on-Mobile_Partner-Center_Android-Integration_wmi reference"
+      - source: "https://docs.smartpos.worldline-solutions.com/Tap-on-Mobile/Partner-Center/Android-Integration/wmi"
         target: "tap-on-mobile/android/wmi.mdx"
-        status: "partial"
-        completeness: 40
+        status: "cross_checked"
+        completeness: 100
         priority: "high"
-        notes: "WMI (Worldline Merchant Interface) documentation. Needs full content."
+        notes: "CROSS-CHECKED. Complete WMI 1.0.3 specification fetched from origin. Includes operation modes, authentication functions, and backend API integration."
 
     ios_integration:
-      - source: "Tap-on-Mobile_Partner-Center_iOs-Integration_sdk-io reference"
+      - source: "https://docs.smartpos.worldline-solutions.com/Tap-on-Mobile/Partner-Center/iOs-Integration/sdk-io"
         target: "tap-on-mobile/ios/sdk-overview.mdx"
-        status: "partial"
-        completeness: 40
+        status: "cross_checked"
+        completeness: 100
         priority: "high"
-        notes: "iOS SDK overview. May need additional technical details."
+        notes: "CROSS-CHECKED. Overview page fetched from origin. Full SDK spec is external Google Drive link (as per origin)."
 
     resources:
       - source: "Tap-on-Mobile_Partner-Center_integration-form reference"
@@ -582,10 +582,10 @@ missing_content:
 # ============================================================================
 summary:
   total_pages_in_target: 78
-  fully_migrated: 58
-  partially_migrated: 16
+  fully_migrated: 61
+  partially_migrated: 13
   not_started: 4
-  overall_completeness_estimate: "85%"
+  overall_completeness_estimate: "88%"
   last_updated: "2026-01-12"
 
   smartpos_section:
@@ -593,6 +593,12 @@ summary:
     total_pages: 31
     pages_complete: 31
     notes: "All SmartPOS documentation fully migrated including WPI codelabs and VAS codelabs"
+
+  tap_on_mobile_section:
+    status: "100% COMPLETE"
+    total_pages: 13
+    pages_complete: 13
+    notes: "All Tap on Mobile documentation fully migrated including WPI 2.2, WMI, and iOS SDK"
 
   newly_migrated:
     - "smartpos/wpi/wpi-codelabs.mdx - WPI Codelabs index (100%)"
@@ -603,9 +609,6 @@ summary:
     - "smartpos/vas/codelabs/barcode-scanner.mdx - Barcode Scanner codelab (100%)"
 
   high_priority_incomplete:
-    - "tap-on-mobile/android/wpi-2-2.mdx - WPI 2.2 for ToM"
-    - "tap-on-mobile/android/wmi.mdx - WMI documentation"
-    - "tap-on-mobile/ios/sdk-overview.mdx - iOS SDK"
     - "terminal/build-your-integration/custom-ui-guide.mdx - Custom UI (24KB source)"
     - "terminal/api-reference/index.mdx - Full API reference"
     - "timapi/c/guide.mdx - C SDK full guide (64KB source)"
@@ -614,8 +617,12 @@ summary:
     - "timapi/swift/guide.mdx - Swift SDK full guide (64KB source)"
     - "timapi/js/guide.mdx - JavaScript SDK guide (28KB source)"
 
+  recently_completed:
+    - "tap-on-mobile/android/wpi-2-2.mdx - WPI 2.2.2 complete specification (100%)"
+    - "tap-on-mobile/android/wmi.mdx - WMI 1.0.3 complete specification (100%)"
+    - "tap-on-mobile/ios/sdk-overview.mdx - iOS SDK overview with external spec link (100%)"
+
   next_actions:
     - "Complete TIMAPI SDK guides (C, Java, .NET, Swift, JS)"
     - "Add Terminal API OpenAPI specification"
-    - "Complete Tap on Mobile SDK documentation"
     - "Review and enhance Custom UI guide"

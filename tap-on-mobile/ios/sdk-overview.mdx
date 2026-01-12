@@ -1,67 +1,129 @@
 ---
 title: "iOS SDK Overview"
-description: "Tap on Mobile iOS SDK documentation"
+description: "Tap on Mobile iOS SDK for Apple Tap to Pay on iPhone"
 ---
 
 # iOS SDK Overview
 
-Native iOS SDK for Tap on Mobile payment acceptance on iPhone and iPad.
+The TapOnMobile SDK is a framework designed to ease the usage of Apple Tap to Pay on iPhone functionality.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="SDK Initialization" icon="play">
+    Initialize and configure the SDK
+  </Card>
+  <Card title="Device Preparation" icon="mobile">
+    Prepare the device for payment acceptance
+  </Card>
+  <Card title="Terminal Activation" icon="check">
+    Multiple activation methods supported
+  </Card>
+  <Card title="Transactions" icon="credit-card">
+    Full payment transaction support
+  </Card>
+</CardGroup>
+
+### Terminal Activation Methods
+
+The SDK supports multiple terminal activation approaches:
+
+- **Backend-to-backend terminal activation** - Server-side integration
+- **Merchant portal terminal activation** - Via web portal
+- **Backoffice terminal activation** - Administrative activation
+
+### Supported Transactions
+
+<Tabs>
+  <Tab title="Financial">
+    - **Sale** - Standard purchase transaction
+    - **Refund** - Return funds for a previous transaction
+    - **Reversal** - Cancel the last successful transaction
+  </Tab>
+  <Tab title="Alternative">
+    - **QR Payment** - QR code-based payment acceptance
+    - **Cancel QR Payment** - Cancel pending QR payment
+  </Tab>
+</Tabs>
+
+### Core Functionalities
+
+| Function | Description |
+|----------|-------------|
+| Last Transaction | Retrieve details of the last processed transaction |
+| Transactions History | Access transaction history records |
+| Terminal Info | Get current terminal configuration and status |
+| Contactless Reader Test | Test the NFC reader functionality |
+| Unregister | Remove terminal registration |
+| Validate Transaction | Validate transaction data |
+| Digital Receipt | Generate and manage digital receipts |
+| Transactions Statistics | Access transaction analytics |
+
+### Helper Functionalities
+
+The SDK includes various helper functions to simplify integration and improve developer experience.
+
+## Documentation
+
+<Note>
+For the complete iOS SDK specification, including detailed API documentation, integration guides, and code examples, please refer to the official documentation.
+</Note>
+
+<Card title="iOS SDK Specification" icon="book" href="https://drive.google.com/drive/folders/1ak2o9BuBQY5I98s4J2GI8JQJyKgpXlXi">
+  Access the complete iOS SDK documentation package
+</Card>
 
 ## System Requirements
 
-- iOS 12.0 or later
-- iPhone 7 or later (NFC capable devices)
-- Xcode 14+
+- iOS 16.0 or later
+- iPhone XS or later (devices supporting Tap to Pay on iPhone)
+- Xcode 15+
+- Swift 5.9+
 
-## Installation
+## Getting Started
 
-### Swift Package Manager
+<Steps>
+  <Step title="Obtain SDK Access">
+    Contact your Worldline Partner Manager to obtain SDK access credentials and the iOS SDK package.
+  </Step>
+  <Step title="Review Documentation">
+    Review the iOS SDK Specification document for detailed integration instructions.
+  </Step>
+  <Step title="Configure Your Project">
+    Add the SDK framework to your Xcode project and configure entitlements for Tap to Pay on iPhone.
+  </Step>
+  <Step title="Initialize SDK">
+    Initialize the SDK with your merchant credentials and terminal configuration.
+  </Step>
+  <Step title="Implement Transactions">
+    Implement the transaction flows according to your business requirements.
+  </Step>
+</Steps>
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/worldline/tap-on-mobile-ios.git", from: "1.0.0")
-]
-```
+## Apple Tap to Pay on iPhone Requirements
 
-### CocoaPods
+To use Tap to Pay on iPhone, your app must meet Apple's requirements:
 
-```ruby
-pod 'WorldlineTapOnMobile'
-```
+<Warning>
+- Your app must be approved by Apple for Tap to Pay on iPhone
+- You must have a valid payment service provider agreement
+- The merchant must be in a supported region
+- End users must have compatible hardware (iPhone XS or later)
+</Warning>
 
-## Quick Start
+## Related Resources
 
-```swift
-import TapOnMobile
-
-class PaymentHandler {
-    private var tapOnMobile: TapOnMobile?
-
-    func setup() {
-        let config = TapOnMobileConfig(
-            merchantId: "YOUR_MERCHANT_ID",
-            terminalId: "YOUR_TERMINAL_ID"
-        )
-
-        tapOnMobile = TapOnMobile(config: config)
-    }
-
-    func startPayment(amount: Int, currency: String) {
-        tapOnMobile?.startPayment(
-            amount: amount,
-            currency: currency
-        ) { result in
-            switch result {
-            case .success(let response):
-                print("Payment successful")
-            case .failure(let error):
-                print("Payment failed: \(error)")
-            }
-        }
-    }
-}
-```
-
-<Note>
-Contact your Worldline Partner Manager for complete SDK documentation and credentials.
-</Note>
+<CardGroup cols={2}>
+  <Card title="Android WPI 2.2" icon="android" href="/tap-on-mobile/android/wpi-2-2">
+    Android payment integration
+  </Card>
+  <Card title="Test Cards" icon="credit-card" href="/tap-on-mobile/resources/test-cards">
+    Test cards for sandbox testing
+  </Card>
+  <Card title="Terminal Registration" icon="mobile" href="/tap-on-mobile/resources/terminal-registration">
+    Terminal setup and registration
+  </Card>
+  <Card title="Sample Apps" icon="code" href="/tap-on-mobile/resources/sample-apps">
+    Reference implementations
+  </Card>
+</CardGroup>
