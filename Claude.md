@@ -39,11 +39,24 @@
 - Commit frequently throughout development
 - NEVER skip or disable pre-commit hooks
 
+## Downloadable files and assets
+- Store all downloadable files (PDFs, ZIPs, DOCX, etc.) locally in `/assets/`
+- Organize by section: `/assets/smartpos/files/`, `/assets/smartpos/wpi-codelabs/`
+- Use Card components for download links (preferred over plain markdown links):
+```mdx
+<Card title="Download File Name" icon="file-pdf" href="/assets/path/to/file.pdf">
+  Description of what the file contains
+</Card>
+```
+- Use appropriate icons: `file-pdf`, `file-word`, `download`, etc.
+- Never link to external document hosting when files can be localized
+
 ## Do not
 - Skip frontmatter on any MDX file
 - Use absolute URLs for internal links
 - Include untested code examples
 - Make assumptions - always ask for clarification
+- Link to external document URLs when files can be downloaded and stored locally
 
 ## Tooling
 
